@@ -339,24 +339,6 @@ footer.disclaimer strong{color:var(--text-1);}
     </div>
   </header>
 
-  <details class="formulas" open style="margin-bottom:22px;">
-    <summary>Loaded material reference — Silopren™ LSR 2640 (Momentive), empirically calibrated</summary>
-    <div class="formula-body">
-      <p style="color:var(--green);font-size:0.8rem;">✓ Compressive modulus below (0.795 MPa) is back-calculated from an actual 3-pad compression test — Ø25×30mm discs, Shore A 42, loads of 5/9/13 kg — not the Gent hardness estimate. It replaces a 1.822 MPa Gent-correlation estimate that turned out to be ~2.3× too stiff for this material. See chat for the full derivation.</p>
-      <table class="matref-table">
-        <tr><td>Type</td><td>Two-part addition-cure LSR, 1:1 mix</td></tr>
-        <tr><td>Shore A hardness</td><td>42</td></tr>
-        <tr><td>Density</td><td>1.12 g/cm³</td></tr>
-        <tr><td>Tensile strength</td><td>8.0 N/mm² (MPa)</td></tr>
-        <tr><td>Elongation at break</td><td>600%</td></tr>
-        <tr><td>Tear strength</td><td>40 N/mm</td></tr>
-        <tr><td>Compression set</td><td>25% (22h @ 175°C)</td></tr>
-        <tr><td>Compressive modulus, E<sub>c</sub></td><td>0.795 MPa (measured, this pad)</td></tr>
-      </table>
-      <p style="margin-top:10px;">The datasheet itself reports only static/mechanical properties (hardness, tensile, tear, compression set) — typical for a general-purpose sealing/molding LSR — and doesn't include compressive or dynamic modulus directly, so the Gent (1958) Shore-A correlation was the starting estimate. The compression test shows Gent's generic curve — fit across many rubber families, not silicones specifically — overestimated this compound's real stiffness by more than 2×, which is exactly why a real test beats a hardness correlation. The dynamic modulus fields (E′@fn, E′@fexc) and tan δ are still <strong style="color:var(--text-1);">not</strong> independently confirmed — the natural-frequency data from the same test turned out to be a lateral/rocking (X-Y) wobble mode, not vertical bounce, so it measures shear stiffness and rocking inertia rather than the axial compression this tool models — it can't be used to correct E′ directly. Until genuine vertical-mode data exists, E′@fn/E′@fexc are provisionally set equal to the measured static value, which the warning banner below will flag as a frequency-independence assumption.</p>
-    </div>
-  </details>
-
   <nav class="tabbar">
     <button type="button" class="tab-btn active" data-tab="vibration"><span class="num">01</span> Vibration Isolator</button>
     <button type="button" class="tab-btn" data-tab="shock"><span class="num">02</span> Shock / Impact Isolator</button>
@@ -379,84 +361,7 @@ footer.disclaimer strong{color:var(--text-1);}
         </div>
 
         <div class="card">
-          <div class="card-head"><h3>Material Properties (yours)</h3><span class="step">STEP 2</span></div>
-          <div class="card-body">
-            <div class="shore-helper" id="v-calib-helper" style="border-color:var(--green);background:rgba(120,214,126,0.05);">
-              <div class="hint" style="margin-top:0;margin-bottom:8px;color:var(--green);">✓ Calibrate E<sub>c</sub> from your own load/deflection test (preferred over the Shore A estimate below).</div>
-              <div class="hint" style="margin-top:0;margin-bottom:10px;">Geometry below is the <strong style="color:var(--text-1);">test specimen you actually measured</strong> — independent from the "Isolator Geometry" design above. Changing your current design won't retroactively corrupt this calibration, and vice versa.</div>
-              <div class="shape-select" id="calib-shape-select" data-target="calib" style="margin-bottom:10px;"></div>
-              <div class="diagram-box" style="margin-bottom:12px;"><svg id="calib-diagram" viewBox="0 0 400 110"></svg></div>
-              <div id="calib-dims"></div>
-              <div class="field-row single">
-                <div class="field"><label>Number of isolators in this test <span class="unit">count</span></label><input type="number" id="v_calib_numiso" value="3" step="1" min="1"></div>
-              </div>
-              <div class="field-row">
-                <div class="field"><label>Test load 1 <span class="unit" id="u-t1l">kg (total)</span></label><input type="number" id="v_t1_load" value="5" step="any"></div>
-                <div class="field"><label>Deflection 1 <span class="unit" id="u-t1d">mm</span></label><input type="number" id="v_t1_defl" value="1.1" step="any"></div>
-              </div>
-              <div class="field-row">
-                <div class="field"><label>Test load 2 <span class="unit" id="u-t2l">kg (total)</span></label><input type="number" id="v_t2_load" value="9" step="any"></div>
-                <div class="field"><label>Deflection 2 <span class="unit" id="u-t2d">mm</span></label><input type="number" id="v_t2_defl" value="2.2" step="any"></div>
-              </div>
-              <div class="field-row">
-                <div class="field"><label>Test load 3 <span class="unit" id="u-t3l">kg (total)</span></label><input type="number" id="v_t3_load" value="13" step="any"></div>
-                <div class="field"><label>Deflection 3 <span class="unit" id="u-t3d">mm</span></label><input type="number" id="v_t3_defl" value="3.0" step="any"></div>
-              </div>
-              <div class="field-row single">
-                <div class="field"><label>Calibrated E<sub>c</sub> (regression through origin)</label><input type="text" id="v_calib_result" readonly tabindex="-1"></div>
-              </div>
-              <button type="button" class="fillbtn" id="v_calib_fill">↓ Use this calibrated value for the modulus field(s) below</button>
-              <div class="hint">Leave load/deflection rows blank to exclude. Static only — says nothing about E′(f<sub>n</sub>)/E′(f<sub>exc</sub>)/tan δ, which need real dynamic (vertical, non-rocking) data.</div>
-            </div>
-
-            <div class="shore-helper" id="v-shore-helper">
-              <div class="field-row">
-                <div class="field">
-                  <label>Shore A hardness <span class="unit">durometer</span></label>
-                  <input type="number" id="v_shoreA" value="42" step="any" min="0" max="100">
-                </div>
-                <div class="field">
-                  <label>Estimated modulus <span class="unit">Gent approx.</span></label>
-                  <input type="text" id="v_shoreEst" readonly tabindex="-1">
-                </div>
-              </div>
-              <button type="button" class="fillbtn" id="v_shore_fill">↓ Use this estimate for the modulus field(s) below</button>
-              <div class="hint">Gent (1958): E ≈ 0.0981(56+7.62336S) / 0.137505(254−2.54S), S = Shore A. Gives ≈1.82 MPa for Shore A 42 — but a real compression test on this exact material measured ≈0.795 MPa (already loaded below), so treat the Gent number here only as a fallback for materials you haven't tested yet.</div>
-            </div>
-
-            <div class="field-row" id="v-cs-row">
-              <div class="field">
-                <label id="v-cs-label">Compressive modulus, E<sub>c</sub> <span class="unit" id="u-cs">psi</span></label>
-                <input type="number" id="v_cs" value="0.795" step="any">
-              </div>
-              <div class="field">
-                <label id="v-pct-label">Target % deflection <span class="unit">%</span></label>
-                <input type="number" id="v_assumedPct" value="15" step="any">
-              </div>
-            </div>
-            <div class="hint" id="v-pct-hint" style="margin-bottom:10px;"></div>
-            <div class="field-row">
-              <div class="field">
-                <label>Dynamic modulus @ f<sub>n</sub>, E′(f<sub>n</sub>) <span class="unit" id="u-efn">psi</span></label>
-                <input type="number" id="v_efn" value="0.795" step="any">
-              </div>
-              <div class="field">
-                <label>Dynamic modulus @ f<sub>exc</sub>, E′(f<sub>exc</sub>) <span class="unit" id="u-efexc">psi</span></label>
-                <input type="number" id="v_efexc" value="0.795" step="any">
-              </div>
-            </div>
-            <div class="field-row single">
-              <div class="field">
-                <label>Tan delta @ f<sub>exc</sub> <span class="unit">unitless</span></label>
-                <input type="number" id="v_tandelta" value="0.05" step="any">
-              </div>
-            </div>
-            <div class="hint" id="v-material-hint">⚠ Tan delta has no Shore-A-style correlation — this 0.05 is a placeholder, not derived from your material. What's actually known: silicones engineered specifically for damping are formulated to hit tan δ ≥ 0.1–0.3; general-purpose sealing silicones like this one are typically well below that, but "well below" isn't a number. Get real DMA data before trusting the transmissibility result — this input has the single biggest effect on it.</div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-head"><h3>Load &amp; Excitation</h3><span class="step">STEP 3</span></div>
+          <div class="card-head"><h3>Load &amp; Excitation</h3><span class="step">STEP 2</span></div>
           <div class="card-body">
             <div class="field-row">
               <div class="field">
@@ -474,12 +379,18 @@ footer.disclaimer strong{color:var(--text-1);}
                 <input type="number" id="v_fexc" value="50" step="any">
               </div>
             </div>
+            <div class="field-row single">
+              <div class="field">
+                <label>Target % deflection <span class="unit">%</span></label>
+                <input type="number" id="v_assumedPct" value="15" step="any">
+              </div>
+            </div>
             <div class="hint" id="v-perisolator"></div>
           </div>
         </div>
 
         <div class="card">
-          <div class="card-head"><h3>Lateral / Rocking Layout</h3><span class="step">STEP 4</span></div>
+          <div class="card-head"><h3>Lateral / Rocking Layout</h3><span class="step">STEP 3</span></div>
           <div class="card-body">
             <div class="seg" id="v-layout-seg" style="margin-bottom:10px;">
               <button type="button" data-layout="circular">Circular (n pads on radius R)</button>
@@ -549,56 +460,7 @@ footer.disclaimer strong{color:var(--text-1);}
         </div>
 
         <div class="card">
-          <div class="card-head"><h3>Spring Rate Reference</h3><span class="step">STEP 2</span></div>
-          <div class="card-body">
-            <div class="shore-helper" id="s-shore-helper">
-              <div class="field-row">
-                <div class="field">
-                  <label>Shore A hardness <span class="unit">durometer</span></label>
-                  <input type="number" id="s_shoreA" value="42" step="any" min="0" max="100">
-                </div>
-                <div class="field">
-                  <label>Estimated modulus <span class="unit">Gent approx.</span></label>
-                  <input type="text" id="s_shoreEst" readonly tabindex="-1">
-                </div>
-              </div>
-              <button type="button" class="fillbtn" id="s_shore_fill">↓ Use this estimate for the modulus field below</button>
-              <div class="hint">Same Gent (1958) approximation as the vibration tab — a first-order fit, weakest below Shore A ~40.</div>
-            </div>
-            <div class="field-row">
-              <div class="field">
-                <label id="s-cs-label">Compressive modulus, E<sub>c</sub> <span class="unit" id="u-cs2">psi</span></label>
-                <input type="number" id="s_cs" value="0.795" step="any">
-              </div>
-              <div class="field">
-                <label id="s-pct-label">Reference % deflection <span class="unit">%</span></label>
-                <input type="number" id="s_refpct" value="20" step="any">
-              </div>
-            </div>
-            <div class="field-row single">
-              <div class="field">
-                <label id="lbl-refload">Reference load at this % deflection <span class="unit" id="u-refload">lb</span></label>
-                <input type="number" id="s_refload" value="37.65" step="any">
-              </div>
-            </div>
-            <div class="hint">Load the isolator to the reference % deflection and record the load. Spring rate k = load ÷ static deflection at that point. Prefer a directly-measured static deflection? Toggle below.</div>
-            <div class="field-row single" style="margin-top:8px;">
-              <label style="font-family:var(--font-mono);font-size:0.68rem;color:var(--text-2);display:flex;align-items:center;gap:8px;cursor:pointer;">
-                <input type="checkbox" id="s_manual_dst" style="width:auto;" checked>
-                Enter measured static deflection directly instead of computing from C<sub>s</sub>
-              </label>
-            </div>
-            <div class="field-row single" id="s_manual_dst_row" style="display:block;">
-              <div class="field">
-                <label>Measured static deflection at reference load <span class="unit" id="u-manualdst">in</span></label>
-                <input type="number" id="s_manual_dst_val" value="0.9525" step="any">
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-head"><h3>Impact Scenario</h3><span class="step">STEP 3</span></div>
+          <div class="card-head"><h3>Impact Scenario</h3><span class="step">STEP 2</span></div>
           <div class="card-body">
             <div class="seg" id="impact-type-seg">
               <button type="button" data-type="vertical" class="active">Vertical drop</button>
@@ -639,8 +501,8 @@ footer.disclaimer strong{color:var(--text-1);}
   </section>
 
   <footer class="disclaimer">
-    <strong>Advisory tool, not a substitute for testing.</strong> Implements standard small-strain bonded-rubber mechanics: the shape-factor correction (Gent &amp; Lindley, 1959) for static deflection and dynamic spring rate, and standard forced-vibration transmissibility / shock energy-balance theory — general to any bonded elastomer, not tied to one manufacturer. Modulus and tan δ are whatever you entered (or estimated from Shore A via Gent's 1958 correlation) — accuracy is only as good as that input, and the tool will warn you when your static/dynamic moduli are set equal, since that treats the material as frequency-independent, which real elastomers generally aren't. This does not account for buckling, creep, temperature effects, or manufacturing/casting limitations, and the shape-factor formula itself is a small-strain approximation (reliable roughly up to SF≈1.2, axial strain ≲10%) — verify final designs against physical prototypes or your material supplier's own test data.
-    <br><br><strong>References:</strong> Gent, A.N. &amp; Lindley, P.B. (1959), "The Compression of Bonded Rubber Blocks," <em>Proc. IMechE</em> 173(1), 111–122 (shape-factor correction, (1+2·SF²)). Gent, A.N. (1958), "On the Relation between Indentation Hardness and Young's Modulus," <em>Trans. IRI</em> 34, 46 (Shore A → modulus estimate). Zhang, Y. et al. (2023), "Temperature and Frequency Dependence of the Dynamic Viscoelastic Properties of Silicone Rubber," <em>Polymers</em> 15(14), 3005 (frequency-dependent storage modulus in silicone rubber — basis for the frequency-independence warning above). Momentive Performance Materials, Silopren™ LSR 2640 Technical Data Sheet (loaded material reference).
+    <strong>Advisory tool, not a substitute for testing.</strong> Implements standard small-strain bonded-rubber mechanics, forced-vibration transmissibility, and shock energy-balance theory. Material behavior is supplied by the calculator's internal experimental profile. This does not account for buckling, creep, temperature effects, or manufacturing/casting limitations; verify final designs against physical prototypes.
+    <br><br><strong>Reference:</strong> Gent, A.N. &amp; Lindley, P.B. (1959), "The Compression of Bonded Rubber Blocks," <em>Proc. IMechE</em> 173(1), 111–122 (shape-factor correction).
   </footer>
 
 </div>
@@ -665,12 +527,9 @@ const CONV = {
   velocity:{ toMetric: v => v * 0.0254,      toImperial: v => v / 0.0254 },      // in/s <-> m/s
 };
 const FIELD_KIND = {
-  v_cs:'pressure', v_efn:'pressure', v_efexc:'pressure', v_totalload:'mass',
-  s_cs:'pressure', s_refload:'mass', s_manual_dst_val:'length',
+  v_totalload:'mass',
   s_impweight:'mass', s_dropheight:'length', s_velocity:'velocity',
   v_padradius:'length', v_cgheight:'length', v_padX:'length', v_padY:'length',
-  v_t1_load:'mass', v_t2_load:'mass', v_t3_load:'mass',
-  v_t1_defl:'length', v_t2_defl:'length', v_t3_defl:'length',
 };
 const UNIT_LABEL = {
   imperial: { length:'in', pressure:'psi', mass:'lb', velocity:'in/s' },
@@ -678,6 +537,35 @@ const UNIT_LABEL = {
 };
 
 let UNIT = 'metric'; // 'imperial' | 'metric'
+
+// Internal material profile. The complete material record and the experimental
+// calibration remain available to the calculation engine but are intentionally
+// not rendered as editable fields or reference tables in the interface.
+const INTERNAL_MATERIAL = Object.freeze({
+  identity: { family:'addition-cure LSR', mixRatio:'1:1', shoreA:42 },
+  datasheet: {
+    density_g_cm3:1.12,
+    tensileStrength_MPa:8.0,
+    elongationAtBreak_pct:600,
+    tearStrength_N_mm:40,
+    compressionSet_pct:25,
+  },
+  experimental: {
+    specimen:{ shape:'disc', diameter_mm:25, thickness_mm:30, count:3 },
+    compressionTest:[
+      { totalMass_kg:5, deflection_mm:1.1 },
+      { totalMass_kg:9, deflection_mm:2.2 },
+      { totalMass_kg:13, deflection_mm:3.0 },
+    ],
+    compressiveModulus_MPa:0.795,
+  },
+  model: {
+    compressiveModulus_MPa:0.795,
+    dynamicModulusAtNaturalFrequency_MPa:0.795,
+    dynamicModulusAtExcitationFrequency_MPa:0.795,
+    tanDelta:0.05,
+  },
+});
 
 function toDisplay(kind, canonicalVal) {
   if (!kind || UNIT === 'imperial') return canonicalVal;
@@ -735,9 +623,7 @@ function shapeFactor(shape, dims) {
 const state = {
   vib: { shape:'disc', padLayout:'rect', dims:{ rect:{...SHAPES.rect.defaults}, square:{...SHAPES.square.defaults}, disc:{D:25/25.4, t:30/25.4}, ring:{...SHAPES.ring.defaults} } },
   shk: { shape:'rect', dims:{ rect:{L:1.75,W:0.5,t:0.1875}, square:{...SHAPES.square.defaults}, disc:{...SHAPES.disc.defaults}, ring:{...SHAPES.ring.defaults} } },
-  calib: { shape:'disc', dims:{ rect:{...SHAPES.rect.defaults}, square:{...SHAPES.square.defaults}, disc:{D:25/25.4, t:30/25.4}, ring:{...SHAPES.ring.defaults} } },
   impactType: 'vertical',
-  manualDst: true,
 };
 
 /* ---------------------------- Shore A -> modulus (Gent's approximation) ---------------------------- */
@@ -1057,11 +943,11 @@ function fmt(v, decimals) {
 function readVibInputs() {
   const shape = state.vib.shape;
   const dims = state.vib.dims[shape]; // canonical inches
-  const cs = toCanonical('pressure', parseFloat(document.getElementById('v_cs').value));
+  const cs = INTERNAL_MATERIAL.model.compressiveModulus_MPa / 0.00689476;
   const assumedPct = parseFloat(document.getElementById('v_assumedPct').value);
-  const efn = toCanonical('pressure', parseFloat(document.getElementById('v_efn').value));
-  const efexc = toCanonical('pressure', parseFloat(document.getElementById('v_efexc').value));
-  const tanDelta = parseFloat(document.getElementById('v_tandelta').value);
+  const efn = INTERNAL_MATERIAL.model.dynamicModulusAtNaturalFrequency_MPa / 0.00689476;
+  const efexc = INTERNAL_MATERIAL.model.dynamicModulusAtExcitationFrequency_MPa / 0.00689476;
+  const tanDelta = INTERNAL_MATERIAL.model.tanDelta;
   const totalLoad = toCanonical('mass', parseFloat(document.getElementById('v_totalload').value));
   const numIso = parseFloat(document.getElementById('v_numiso').value) || 1;
   const fexc = parseFloat(document.getElementById('v_fexc').value);
@@ -1204,16 +1090,8 @@ function renderVibration() {
   const presUnit = UNIT_LABEL[UNIT].pressure;
 
   // update unit labels in DOM
-  document.getElementById('u-cs').textContent = presUnit;
-  document.getElementById('u-efn').textContent = presUnit;
-  document.getElementById('u-efexc').textContent = presUnit;
   document.getElementById('u-load').textContent = loadUnit;
   document.getElementById('lbl-totalload').innerHTML = (UNIT==='imperial' ? 'Total load' : 'Total mass') + ` <span class="unit" id="u-load">${loadUnit}</span>`;
-  ['u-t1l','u-t2l','u-t3l'].forEach(id => document.getElementById(id).textContent = `${loadUnit} (total)`);
-  ['u-t1d','u-t2d','u-t3d'].forEach(id => document.getElementById(id).textContent = lenUnit);
-
-  document.getElementById('v-pct-hint').textContent =
-    'This is your design target for the check below — it does not change the modulus (which is treated as constant, appropriate for a reasonably linear elastomer in this strain range).';
 
   const inp = readVibInputs();
   let out;
@@ -1226,14 +1104,7 @@ function renderVibration() {
 
   // warnings
   const warns = [];
-  function nearlyEqual(a,b,tol=0.005){ return Math.abs(a-b) <= tol*Math.max(Math.abs(a),Math.abs(b),1e-9); }
-  const efnEqEfexc = nearlyEqual(inp.efn, inp.efexc);
-  const csEqEfn = nearlyEqual(inp.cs, inp.efn);
-  if (efnEqEfexc && csEqEfn) {
-    warns.push({level:'caution', text:`Static modulus, E′(f\u2099), and E′(f_exc) are all the same value — you're treating this material as having zero frequency dependence. Published DMA testing on silicone rubber shows storage modulus genuinely rising with frequency (not flat), sometimes substantially — this is a stand-in for when you lack real data, not a validated equivalence. It matters most when f_exc/f_n is large (here r = ${fmt(out.r,2)}). Get frequency-swept DMA data if this natural-frequency/transmissibility result needs to be trustworthy.`});
-  } else if (efnEqEfexc) {
-    warns.push({level:'caution', text:`E′(f\u2099) and E′(f_exc) are set to the same value — assumes no dynamic stiffening between these two frequencies (r = ${fmt(out.r,2)}). Real elastomers usually stiffen somewhat with frequency; treat the transmissibility result accordingly.`});
-  }
+  warns.push({level:'caution', text:'Calculations use the internal experimental material model. Validate critical designs with a physical prototype under the actual temperature and frequency conditions.'});
   if (out.SF > 1.2) {
     warns.push({level:'caution', text:`Shape factor is ${fmt(out.SF,2)} — above ~1.2. The small-strain bonded-rubber shape-factor formula (Gent & Lindley) is generally reliable up to roughly this range; treat results beyond it as indicative only.`});
   } else {
@@ -1267,15 +1138,12 @@ function renderVibration() {
     ${cell('Shape factor, SF', fmt(out.SF,3))}
     ${cell('Loaded area', fmt(out.loadedArea, 3) + ` ${areaUnit}`)}
     ${divider('Static')}
-    ${cell('Compressive modulus', fmt(out.compressiveModulus) + ` ${presUnit}`)}
-    ${cell('Corrected modulus', fmt(out.correctedModulus) + ` ${presUnit}`)}
     ${cell('Static deflection', fmt(round(out.staticDeflection, UNIT==='imperial'?4:3)) + ` ${lenUnit}`)}
     <div class="result-cell hero"><div class="rlabel">Percent deflection<span class="iter-badge">target check</span></div><div class="rvalue">${fmt(out.pctDeflection,1)}<small>%</small></div></div>
     ${divider('Dynamic')}
     ${cell('Dynamic spring rate, K′', fmt(out.Kdyn) + ` ${kUnit}`)}
     <div class="result-cell hero"><div class="rlabel">Natural frequency, f\u2099</div><div class="rvalue">${fmt(out.fn,2)}<small>Hz</small></div></div>
     ${cell('Frequency ratio, r', fmt(out.r,2))}
-    ${cell('Dynamic shear ratio, Gr\u1d48\u02b8\u207f', fmt(out.Grdyn,3))}
     ${divider('Transmissibility')}
     ${cell('Transmissibility, T', fmt(out.T,3))}
     ${cell('Transmissibility @ resonance, Q', fmt(out.Q,2))}
@@ -1284,8 +1152,7 @@ function renderVibration() {
 
   document.getElementById('vib-formulas').innerHTML = `
     <p>Shape factor (this shape: ${SHAPES[inp.shape].label}) — Gent &amp; Lindley (1959)</p><code>SF = loaded area / unloaded (bulge) area</code>
-    <p>Compressive modulus, corrected for shape factor</p><code>E_c = (entered directly, or estimated from Shore A)
-E_c,corr = E_c × (1 + 2·SF²)</code>
+    <p>Compressive modulus, corrected for shape factor</p><code>E_c,corr = E_profile × (1 + 2·SF²)</code>
     <p>Static deflection &amp; percent deflection</p><code>δ_st = (load/isolator × t) / (E_c,corr × loaded area)
 %δ = δ_st / t × 100      — compared against your target %, informational</code>
     <p>Dynamic spring rate &amp; natural frequency</p><code>K′ = E′(f_n) × (1 + 2·SF²) × loaded area / t
@@ -1395,27 +1262,23 @@ function renderRocking() {
 function readShkInputs() {
   const shape = state.shk.shape;
   const dims = state.shk.dims[shape];
-  const cs = toCanonical('pressure', parseFloat(document.getElementById('s_cs').value));
-  const refPct = parseFloat(document.getElementById('s_refpct').value);
-  const refLoad = toCanonical('mass', parseFloat(document.getElementById('s_refload').value));
-  const manualDst = document.getElementById('s_manual_dst').checked;
-  const manualDstVal = toCanonical('length', parseFloat(document.getElementById('s_manual_dst_val').value));
+  const cs = INTERNAL_MATERIAL.model.compressiveModulus_MPa / 0.00689476;
   const impactType = state.impactType;
   const impWeight = toCanonical('mass', parseFloat(document.getElementById('s_impweight').value));
   const dropHeight = toCanonical('length', parseFloat(document.getElementById('s_dropheight').value));
   const velocity = toCanonical('velocity', parseFloat(document.getElementById('s_velocity').value));
-  return { shape, dims, cs, refPct, refLoad, manualDst, manualDstVal, impactType, impWeight, dropHeight, velocity };
+  return { shape, dims, cs, impactType, impWeight, dropHeight, velocity };
 }
 
 function calcShock(inp) {
   // inp.* values are canonical Imperial (lb, in, in/s). Convert to a consistent
   // mm / N / MPa / kg system for Metric mode (1 MPa = 1 N/mm^2).
-  let SF, loadedArea, thickness, g, csForCalc, refLoadForCalc, impMassForCalc, dropHeightForCalc, velocityForCalc;
+  let SF, loadedArea, thickness, g, csForCalc, impMassForCalc, dropHeightForCalc, velocityForCalc;
 
   if (UNIT === 'imperial') {
     const sfr = shapeFactor(inp.shape, inp.dims);
     SF = sfr.SF; loadedArea = sfr.loadedArea; thickness = inp.dims.t;
-    g = 386.1; csForCalc = inp.cs; refLoadForCalc = inp.refLoad;
+    g = 386.1; csForCalc = inp.cs;
     impMassForCalc = inp.impWeight; dropHeightForCalc = inp.dropHeight; velocityForCalc = inp.velocity;
   } else {
     const mmDims = {}; Object.keys(inp.dims).forEach(k => mmDims[k] = inp.dims[k]*25.4);
@@ -1423,32 +1286,16 @@ function calcShock(inp) {
     SF = sfr.SF; loadedArea = sfr.loadedArea; thickness = mmDims.t;
     g = 9.80665;
     csForCalc = inp.cs * 0.00689476;         // psi (canonical) -> MPa
-    refLoadForCalc = inp.refLoad * 0.453592; // lb (canonical) -> kg
     impMassForCalc = inp.impWeight * 0.453592; // lb (canonical) -> kg
     dropHeightForCalc = inp.dropHeight * 25.4; // in -> mm
     velocityForCalc = inp.velocity * 25.4;     // in/s -> mm/s
   }
 
-  let staticDeflection, k, refForceForCalc;
+  let k;
   if (UNIT === 'imperial') {
-    if (inp.manualDst) {
-      staticDeflection = inp.manualDstVal;
-    } else {
-      const compressiveModulus = csForCalc;
-      const correctedModulus = compressiveModulus * (1+2*SF*SF);
-      staticDeflection = (refLoadForCalc * thickness) / (correctedModulus * loadedArea);
-    }
-    k = refLoadForCalc / staticDeflection; // lb/in
+    k = csForCalc * (1+2*SF*SF) * loadedArea / thickness; // lb/in
   } else {
-    refForceForCalc = refLoadForCalc * g; // N
-    if (inp.manualDst) {
-      staticDeflection = inp.manualDstVal * 25.4; // mm
-    } else {
-      const compressiveModulus = csForCalc;
-      const correctedModulus = compressiveModulus * (1+2*SF*SF);
-      staticDeflection = (refForceForCalc * thickness) / (correctedModulus * loadedArea); // mm
-    }
-    k = refForceForCalc / staticDeflection; // N/mm
+    k = csForCalc * (1+2*SF*SF) * loadedArea / thickness; // N/mm
   }
 
   let KE, KEdisplay, d, pctDynDeflection, peakForce, peakG;
@@ -1472,7 +1319,7 @@ function calcShock(inp) {
     peakG = peakForce/(massKg*g);
   }
 
-  return { SF, loadedArea, thickness, staticDeflection, k, KE, KEdisplay, d, pctDynDeflection, peakForce, peakG };
+  return { SF, loadedArea, thickness, k, KE, KEdisplay, d, pctDynDeflection, peakForce, peakG };
 }
 
 function renderShock() {
@@ -1480,21 +1327,15 @@ function renderShock() {
   const areaUnit = UNIT==='imperial' ? 'in²' : 'mm²';
   const kUnit = UNIT==='imperial' ? 'lb/in' : 'N/mm';
   const massUnit = UNIT_LABEL[UNIT].mass;
-  const presUnit = UNIT_LABEL[UNIT].pressure;
   const forceUnit = UNIT==='imperial' ? 'lbf' : 'N';
   const keUnit = UNIT==='imperial' ? 'in·lb' : 'J';
   const velUnit = UNIT_LABEL[UNIT].velocity;
 
-  document.getElementById('u-cs2').textContent = presUnit;
-  document.getElementById('u-refload').textContent = massUnit;
-  document.getElementById('lbl-refload').innerHTML = `Reference ${UNIT==='imperial'?'load':'mass'} at this % deflection <span class="unit" id="u-refload">${massUnit}</span>`;
-  document.getElementById('u-manualdst').textContent = lenUnit;
   document.getElementById('u-impweight').textContent = massUnit;
   document.getElementById('lbl-impactweight').innerHTML = `Component ${UNIT==='imperial'?'weight':'mass'} <span class="unit" id="u-impweight">${massUnit}</span>`;
   document.getElementById('u-dropheight').textContent = lenUnit;
   document.getElementById('u-velocity').textContent = velUnit;
 
-  document.getElementById('s_manual_dst_row').style.display = state.manualDst ? 'block' : 'none';
   document.getElementById('s_dropheight_field').style.display = state.impactType==='vertical' ? 'flex' : 'none';
   document.getElementById('s_velocity_field').style.display = state.impactType==='horizontal' ? 'flex' : 'none';
   document.getElementById('impact-diagram').innerHTML = svgImpactDiagram(state.impactType);
@@ -1527,7 +1368,6 @@ function renderShock() {
     ${cell('Shape factor, SF', fmt(out.SF,3))}
     ${cell('Loaded area', fmt(out.loadedArea,3) + ` ${areaUnit}`)}
     ${divider('Spring rate')}
-    ${cell('Static deflection @ reference', `${fmt(out.staticDeflection, UNIT==='imperial'?4:3)} ${lenUnit}`)}
     ${cell('Nominal spring rate, k', fmt(out.k) + ` ${kUnit}`)}
     ${divider('Impact')}
     ${cell('Kinetic energy', fmt(out.KEdisplay,3) + ` ${keUnit}`)}
@@ -1539,10 +1379,7 @@ function renderShock() {
   `;
 
   document.getElementById('shk-formulas').innerHTML = `
-    <p>Spring rate at a reference % deflection</p><code>${state.manualDst ? 'k = reference load / measured static deflection  (measured directly)' : `E_c = (entered directly, or estimated from Shore A)
-E_c,corr = E_c × (1 + 2·SF²)
-δ_st = (ref load × t) / (E_c,corr × loaded area)
-k = ref load / δ_st`}</code>
+    <p>Spring rate from the internal material profile</p><code>k = E_profile × (1 + 2·SF²) × loaded area / t</code>
     <p>Kinetic energy of impact</p><code>Vertical drop:      KE = W × h
 Horizontal impact:  KE = ½ m v²</code>
     <p>Dynamic deflection (energy method — spring energy = kinetic energy)</p><code>d = √(2·KE / k)
@@ -1556,65 +1393,24 @@ Peak accel. (g's) = F / W</code>
 }
 
 /* ---------------------------- recalc / render orchestrator ---------------------------- */
-// Calibrate-from-test-data: regression-through-origin for E_c using the INDEPENDENT
-// test-specimen geometry in state.calib (deliberately decoupled from state.vib's
-// current design geometry, so redesigning the part doesn't retroactively corrupt a
-// calibration measured on a different physical specimen).
-function computeCalibration() {
-  const shape = state.calib.shape;
-  const dims = state.calib.dims[shape];
-  const numIsoEl = document.getElementById('v_calib_numiso');
-  const numIso = parseFloat(numIsoEl.value) || 1;
-  const sfr = UNIT === 'imperial' ? shapeFactor(shape, dims)
-    : shapeFactor(shape, Object.fromEntries(Object.entries(dims).map(([k,v])=>[k,v*25.4])));
-  const thickness = UNIT === 'imperial' ? dims.t : dims.t*25.4;
-  const corr = 1 + 2*sfr.SF*sfr.SF;
-
-  const rows = [['v_t1_load','v_t1_defl'],['v_t2_load','v_t2_defl'],['v_t3_load','v_t3_defl']];
-  let sumFd = 0, sumFF = 0, n = 0;
-  rows.forEach(([lId, dId]) => {
-    const loadDisp = parseFloat(document.getElementById(lId).value);
-    const deflDisp = parseFloat(document.getElementById(dId).value);
-    if (isNaN(loadDisp) || isNaN(deflDisp) || loadDisp<=0 || deflDisp<=0) return;
-    const loadCanon = toCanonical('mass', loadDisp); // canonical lb (total)
-    const deflCanon = toCanonical('length', deflDisp); // canonical inches
-    let F, d;
-    if (UNIT === 'imperial') { F = loadCanon/numIso; d = deflCanon; }
-    else { F = (loadCanon*0.453592/numIso) * 9.80665; d = deflCanon*25.4; } // N, mm
-    sumFd += F*d; sumFF += F*F; n++;
-  });
-
-  const est = document.getElementById('v_calib_result');
-  if (n === 0 || sumFF === 0) { est.value = '—'; return null; }
-  const slope = sumFd/sumFF; // mm/N or in/lbf
-  const Ecorr = thickness/(slope*sfr.loadedArea);
-  const Ec = Ecorr/corr;
-  const val = round(Ec, UNIT==='imperial'?3:4);
-  est.value = `${val} ${UNIT_LABEL[UNIT].pressure}  (${n} point${n>1?'s':''})`;
-  return val;
-}
-
 function recalc() {
   document.getElementById('vib-diagram').innerHTML = svgDiagram(state.vib.shape, state.vib.dims[state.vib.shape]);
   document.getElementById('shk-diagram').innerHTML = svgDiagram(state.shk.shape, state.shk.dims[state.shk.shape]);
   renderVibration();
   renderRocking();
   renderShock();
-  computeCalibration();
 }
 
 /* ---------------------------- wiring ---------------------------- */
 function refreshAllDimFieldValues() {
-  ['vib','shk','calib'].forEach(target => renderDimFields(target));
+  ['vib','shk'].forEach(target => renderDimFields(target));
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   renderShapeSelector('vib');
   renderShapeSelector('shk');
-  renderShapeSelector('calib');
   renderDimFields('vib');
   renderDimFields('shk');
-  renderDimFields('calib');
 
   // unit switch
   const unitSwitch = document.getElementById('unitSwitch');
@@ -1641,38 +1437,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
       refreshAllDimFieldValues();
-      if (typeof updateVShoreEst === 'function') updateVShoreEst();
-      if (typeof updateSShoreEst === 'function') updateSShoreEst();
-      if (typeof computeCalibration === 'function') computeCalibration();
       recalc();
     });
   });
-
-  // Shore A -> modulus estimator (live preview + fill buttons)
-  function wireShoreHelper(inputId, estId, fillBtnId, targetFieldIds) {
-    const inp = document.getElementById(inputId);
-    const est = document.getElementById(estId);
-    const updateEst = () => {
-      const S = parseFloat(inp.value);
-      const eMPa = shoreAtoModulusMPa(S);
-      if (eMPa === null) { est.value = '—'; return; }
-      const val = UNIT === 'imperial' ? eMPa / 0.00689476 : eMPa;
-      est.value = `${round(val, UNIT==='imperial'?1:3)} ${UNIT_LABEL[UNIT].pressure}`;
-    };
-    inp.addEventListener('input', updateEst);
-    document.getElementById(fillBtnId).addEventListener('click', () => {
-      const S = parseFloat(inp.value);
-      const eMPa = shoreAtoModulusMPa(S);
-      if (eMPa === null) return;
-      const val = round(UNIT === 'imperial' ? eMPa / 0.00689476 : eMPa, UNIT==='imperial'?2:3);
-      targetFieldIds.forEach(id => { document.getElementById(id).value = val; });
-      recalc();
-    });
-    updateEst();
-    return updateEst;
-  }
-  const updateVShoreEst = wireShoreHelper('v_shoreA','v_shoreEst','v_shore_fill', ['v_cs','v_efn','v_efexc']);
-  const updateSShoreEst = wireShoreHelper('s_shoreA','s_shoreEst','s_shore_fill', ['s_cs']);
 
   // tabs
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -1704,30 +1471,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // manual static deflection toggle
-  document.getElementById('s_manual_dst').addEventListener('change', (e) => {
-    state.manualDst = e.target.checked;
-    recalc();
-  });
-
   // any other input changes
-  ['v_cs','v_assumedPct','v_efn','v_efexc','v_tandelta','v_totalload','v_numiso','v_fexc',
+  ['v_assumedPct','v_totalload','v_numiso','v_fexc',
    'v_padradius','v_cgheight','v_padX','v_padY',
-   's_cs','s_refpct','s_refload','s_manual_dst_val','s_impweight','s_dropheight','s_velocity']
+   's_impweight','s_dropheight','s_velocity']
    .forEach(id => document.getElementById(id).addEventListener('input', recalc));
-
-  // Calibrate-from-test-data panel wiring (computeCalibration itself is a top-level
-  // function, called every recalc() so it always stays in sync with unit/shape changes)
-  ['v_t1_load','v_t1_defl','v_t2_load','v_t2_defl','v_t3_load','v_t3_defl','v_calib_numiso']
-    .forEach(id => document.getElementById(id).addEventListener('input', recalc));
-  document.getElementById('v_calib_fill').addEventListener('click', () => {
-    const val = computeCalibration();
-    if (val === null) return;
-    ['v_cs','v_efn','v_efexc'].forEach(id => { document.getElementById(id).value = val; });
-    recalc();
-  });
-  computeCalibration();
-  document.getElementById('calib-diagram').innerHTML = svgCalibDiagram();
 
   recalc();
 });
