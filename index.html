@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Isolator Design Calculator — Vibration &amp; Shock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-0:#0a1622;
+  --bg-1:#0e1e2f;
+  --bg-2:#132a40;
+  --panel:#0f2236;
+  --panel-2:#0c1d2e;
+  --line:rgba(140,190,220,0.14);
+  --line-strong:rgba(140,190,220,0.28);
+  --grid-line:rgba(110,170,210,0.055);
+  --text-0:#eaf3fa;
+  --text-1:#b9cddf;
+  --text-2:#7e94a8;
+  --amber:#f2a341;
+  --amber-dim:#8a6428;
+  --cyan:#5fd0d6;
+  --cyan-dim:rgba(95,208,214,0.14);
+  --red:#ff6b5e;
+  --red-dim:rgba(255,107,94,0.13);
+  --green:#78d67e;
+  --green-dim:rgba(120,214,126,0.12);
+  --radius:3px;
+  --font-head:'Space Grotesk',sans-serif;
+  --font-body:'IBM Plex Sans',sans-serif;
+  --font-mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0/38px 38px,
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0/38px 38px,
+    radial-gradient(ellipse at 20% -10%, #12324a 0%, transparent 55%),
+    radial-gradient(ellipse at 100% 0%, #0f2a3d 0%, transparent 45%),
+    var(--bg-0);
+  color:var(--text-0);
+  font-family:var(--font-body);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1240px;margin:0 auto;padding:28px 22px 60px;}
+
+/* ---------- Header ---------- */
+header.top{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  gap:20px;flex-wrap:wrap;
+  padding-bottom:22px;margin-bottom:22px;
+  border-bottom:1px solid var(--line);
+}
+.brandmark{display:flex;align-items:center;gap:14px;}
+.brandmark svg{flex:0 0 auto;}
+h1{
+  font-family:var(--font-head);
+  font-size:1.5rem;
+  font-weight:700;
+  letter-spacing:0.01em;
+  margin:0 0 4px 0;
+  color:var(--text-0);
+}
+h1 span{color:var(--cyan);}
+.subtitle{
+  font-size:0.82rem;
+  color:var(--text-2);
+  letter-spacing:0.03em;
+  text-transform:uppercase;
+  font-family:var(--font-mono);
+}
+.unit-toggle{
+  display:flex;align-items:center;gap:10px;
+  font-family:var(--font-mono);font-size:0.78rem;
+  color:var(--text-2);
+  padding-top:4px;
+}
+.unit-toggle .lbl{letter-spacing:0.06em;text-transform:uppercase;font-size:0.68rem;color:var(--text-2);margin-right:2px;}
+.switch{
+  position:relative;display:inline-flex;background:var(--panel-2);
+  border:1px solid var(--line-strong);border-radius:20px;padding:3px;gap:2px;
+}
+.switch button{
+  border:none;background:transparent;color:var(--text-2);
+  font-family:var(--font-mono);font-size:0.72rem;font-weight:500;
+  letter-spacing:0.05em;
+  padding:7px 14px;border-radius:16px;cursor:pointer;
+  transition:color .15s ease;
+  position:relative;z-index:1;
+}
+.switch button.active{color:#08131f;}
+.switch .thumb{
+  position:absolute;top:3px;bottom:3px;left:3px;
+  width:calc(50% - 3px);
+  background:var(--amber);
+  border-radius:16px;
+  transition:transform .22s cubic-bezier(.4,0,.2,1);
+  z-index:0;
+}
+.switch.metric .thumb{transform:translateX(100%);}
+
+/* ---------- Tabs ---------- */
+.tabbar{
+  display:flex;gap:6px;margin-bottom:22px;
+  border-bottom:1px solid var(--line);
+}
+.tabbar button{
+  font-family:var(--font-head);font-weight:600;font-size:0.92rem;
+  background:transparent;border:none;color:var(--text-2);
+  padding:11px 20px 13px;cursor:pointer;letter-spacing:0.01em;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+  display:flex;align-items:center;gap:9px;
+  transition:color .15s ease;
+}
+.tabbar button .num{
+  font-family:var(--font-mono);font-size:0.68rem;color:var(--text-2);
+  border:1px solid var(--line-strong);border-radius:3px;padding:1px 6px;
+}
+.tabbar button.active{color:var(--text-0);border-bottom-color:var(--amber);}
+.tabbar button.active .num{color:var(--amber);border-color:var(--amber-dim);}
+.tabbar button:hover{color:var(--text-0);}
+
+.panel-section{display:none;}
+.panel-section.active{display:block;}
+
+/* ---------- Layout grid ---------- */
+.grid2{
+  display:grid;
+  grid-template-columns:minmax(320px,420px) 1fr;
+  gap:22px;
+  align-items:start;
+}
+@media (max-width:920px){.grid2{grid-template-columns:1fr;}}
+
+.card{
+  background:linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  margin-bottom:18px;
+  overflow:hidden;
+}
+.card-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-bottom:1px solid var(--line);
+  background:rgba(255,255,255,0.015);
+}
+.card-head h3{
+  margin:0;font-family:var(--font-mono);font-size:0.72rem;
+  letter-spacing:0.11em;text-transform:uppercase;color:var(--cyan);
+  font-weight:500;
+}
+.card-head .step{
+  font-family:var(--font-mono);font-size:0.65rem;color:var(--text-2);
+  border:1px solid var(--line-strong);padding:1px 7px;border-radius:2px;
+}
+.card-body{padding:16px;}
+
+/* ---------- Shape selector ---------- */
+.shape-select{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.shape-select button{
+  flex:1 1 auto;min-width:70px;
+  background:var(--panel-2);border:1px solid var(--line-strong);
+  color:var(--text-1);border-radius:3px;padding:9px 6px 7px;
+  cursor:pointer;font-family:var(--font-body);font-size:0.74rem;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  transition:all .15s ease;
+}
+.shape-select button svg{width:26px;height:26px;opacity:0.7;}
+.shape-select button.active{
+  border-color:var(--amber);color:var(--text-0);background:rgba(242,163,65,0.08);
+}
+.shape-select button.active svg{opacity:1;}
+.shape-select button:hover{border-color:var(--cyan);}
+
+/* ---------- Fields ---------- */
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.field-row.single{grid-template-columns:1fr;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{
+  font-family:var(--font-mono);font-size:0.68rem;color:var(--text-2);
+  letter-spacing:0.02em;
+  display:flex;justify-content:space-between;
+}
+.field label .unit{color:var(--text-2);opacity:0.7;}
+.field input, .field select{
+  background:var(--bg-1);
+  border:1px solid var(--line-strong);
+  color:var(--text-0);
+  font-family:var(--font-mono);font-size:0.86rem;
+  padding:8px 9px;border-radius:2px;
+  width:100%;
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+.field input:focus, .field select:focus{
+  outline:none;border-color:var(--cyan);box-shadow:0 0 0 2px var(--cyan-dim);
+}
+.field input::-webkit-outer-spin-button,
+.field input::-webkit-inner-spin-button{opacity:0.4;}
+.hint{font-size:0.68rem;color:var(--text-2);margin-top:2px;line-height:1.4;}
+.seg{display:flex;border:1px solid var(--line-strong);border-radius:2px;overflow:hidden;}
+.seg button{
+  flex:1;background:var(--bg-1);border:none;color:var(--text-2);
+  font-family:var(--font-mono);font-size:0.74rem;padding:8px 6px;cursor:pointer;
+  border-right:1px solid var(--line-strong);
+}
+.seg button:last-child{border-right:none;}
+.seg button.active{background:var(--amber);color:#0a1622;font-weight:600;}
+
+/* ---------- Diagram ---------- */
+.diagram-box{
+  background:var(--bg-1);border:1px solid var(--line);border-radius:2px;
+  padding:10px;margin-bottom:14px;
+}
+.diagram-box svg{display:block;width:100%;height:auto;}
+
+/* ---------- Results ---------- */
+.warn-stack{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+.warn{
+  display:flex;gap:10px;align-items:flex-start;
+  padding:10px 12px;border-radius:2px;font-size:0.8rem;line-height:1.45;
+  border:1px solid;
+}
+.warn .mark{font-family:var(--font-mono);font-weight:600;flex:0 0 auto;font-size:0.72rem;padding-top:1px;}
+.warn.ok{background:var(--green-dim);border-color:rgba(120,214,126,0.35);color:#c9f0cb;}
+.warn.ok .mark{color:var(--green);}
+.warn.caution{background:rgba(242,163,65,0.09);border-color:var(--amber-dim);color:#f5dcb3;}
+.warn.caution .mark{color:var(--amber);}
+.warn.bad{background:var(--red-dim);border-color:rgba(255,107,94,0.35);color:#ffd2cc;}
+.warn.bad .mark{color:var(--red);}
+
+.results-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:2px;overflow:hidden;
+}
+.result-cell{
+  background:var(--panel-2);padding:11px 13px;
+}
+.result-cell.wide{grid-column:1/-1;background:var(--bg-2);}
+.result-cell .rlabel{
+  font-family:var(--font-mono);font-size:0.66rem;color:var(--text-2);
+  text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px;
+}
+.result-cell .rvalue{
+  font-family:var(--font-mono);font-size:1.28rem;font-weight:500;color:var(--cyan);
+  line-height:1.1;
+}
+.result-cell .rvalue small{font-size:0.62rem;color:var(--text-2);font-weight:400;margin-left:5px;}
+.result-cell.hero .rvalue{color:var(--amber);font-size:1.55rem;}
+.result-cell .rsub{font-size:0.68rem;color:var(--text-2);margin-top:4px;}
+.section-divider{
+  grid-column:1/-1;background:var(--bg-0);padding:6px 13px 4px;
+  font-family:var(--font-mono);font-size:0.63rem;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--text-2);border-top:1px solid var(--line);
+}
+
+/* ---------- Formula reference ---------- */
+details.formulas{
+  border:1px solid var(--line);border-radius:2px;background:var(--panel-2);
+  margin-top:4px;
+}
+details.formulas summary{
+  cursor:pointer;padding:11px 15px;font-family:var(--font-mono);
+  font-size:0.72rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-2);
+  list-style:none;display:flex;align-items:center;gap:8px;
+}
+details.formulas summary::-webkit-details-marker{display:none;}
+details.formulas summary:before{content:'▸';color:var(--amber);font-size:0.7rem;transition:transform .15s;}
+details.formulas[open] summary:before{transform:rotate(90deg);}
+.formula-body{padding:0 16px 16px;font-size:0.78rem;color:var(--text-1);line-height:1.7;}
+.formula-body code{
+  display:block;background:var(--bg-1);border:1px solid var(--line);
+  padding:8px 10px;border-radius:2px;font-family:var(--font-mono);
+  font-size:0.76rem;color:var(--cyan);margin:5px 0 12px;overflow-x:auto;white-space:pre;
+}
+.formula-body p{margin:0 0 4px;color:var(--text-2);font-size:0.74rem;}
+
+.shore-helper{
+  background:var(--bg-1);border:1px dashed var(--line-strong);border-radius:2px;
+  padding:12px;margin-bottom:14px;
+}
+.fillbtn{
+  width:100%;margin-top:8px;background:rgba(95,208,214,0.09);
+  border:1px solid var(--cyan-dim);color:var(--cyan);
+  font-family:var(--font-mono);font-size:0.72rem;padding:8px;border-radius:2px;
+  cursor:pointer;transition:all .15s ease;
+}
+.fillbtn:hover{background:rgba(95,208,214,0.18);border-color:var(--cyan);}
+.matref-table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:0.76rem;}
+.matref-table td{padding:6px 8px;border-bottom:1px solid var(--line);color:var(--text-1);}
+.matref-table td:first-child{color:var(--text-2);}
+.matref-table td:last-child{text-align:right;color:var(--cyan);}
+
+footer.disclaimer{
+  margin-top:34px;padding-top:18px;border-top:1px solid var(--line);
+  font-size:0.74rem;color:var(--text-2);line-height:1.6;
+  font-family:var(--font-body);
+}
+footer.disclaimer strong{color:var(--text-1);}
+
+.iter-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:var(--font-mono);font-size:0.65rem;
+  padding:2px 7px;border-radius:10px;margin-left:8px;
+  border:1px solid var(--line-strong);color:var(--text-2);
+  text-transform:none;letter-spacing:0;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brandmark">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+        <rect x="1" y="1" width="38" height="38" rx="3" stroke="#5fd0d6" stroke-width="1.2" opacity="0.5"/>
+        <path d="M8 28 L8 22 Q8 18 12 18 L28 18 Q32 18 32 22 L32 28" stroke="#f2a341" stroke-width="1.6" fill="none"/>
+        <rect x="6" y="12" width="28" height="6" rx="1" fill="none" stroke="#eaf3fa" stroke-width="1.4"/>
+        <line x1="20" y1="6" x2="20" y2="12" stroke="#eaf3fa" stroke-width="1.4"/>
+        <path d="M16 6 L20 2 L24 6" stroke="#eaf3fa" stroke-width="1.4" fill="none" stroke-linejoin="round"/>
+        <rect x="6" y="28" width="28" height="6" rx="1" fill="none" stroke="#eaf3fa" stroke-width="1.4"/>
+      </svg>
+      <div>
+        <h1>ISOLATOR <span>DESIGN</span> CALCULATOR</h1>
+        <div class="subtitle">Vibration &amp; Shock Sizing for Silicone &amp; Standard Elastomers</div>
+      </div>
+    </div>
+    <div class="unit-toggle">
+      <span class="lbl">Units</span>
+      <div class="switch metric" id="unitSwitch">
+        <div class="thumb"></div>
+        <button type="button" data-unit="imperial">IMPERIAL · in / lb</button>
+        <button type="button" data-unit="metric" class="active">METRIC · mm / kg</button>
+      </div>
+    </div>
+  </header>
+
+  <details class="formulas" open style="margin-bottom:22px;">
+    <summary>Loaded material reference — Silopren™ LSR 2640 (Momentive), empirically calibrated</summary>
+    <div class="formula-body">
+      <p style="color:var(--green);font-size:0.8rem;">✓ Compressive modulus below (0.795 MPa) is back-calculated from an actual 3-pad compression test — Ø25×30mm discs, Shore A 42, loads of 5/9/13 kg — not the Gent hardness estimate. It replaces a 1.822 MPa Gent-correlation estimate that turned out to be ~2.3× too stiff for this material. See chat for the full derivation.</p>
+      <table class="matref-table">
+        <tr><td>Type</td><td>Two-part addition-cure LSR, 1:1 mix</td></tr>
+        <tr><td>Shore A hardness</td><td>42</td></tr>
+        <tr><td>Density</td><td>1.12 g/cm³</td></tr>
+        <tr><td>Tensile strength</td><td>8.0 N/mm² (MPa)</td></tr>
+        <tr><td>Elongation at break</td><td>600%</td></tr>
+        <tr><td>Tear strength</td><td>40 N/mm</td></tr>
+        <tr><td>Compression set</td><td>25% (22h @ 175°C)</td></tr>
+        <tr><td>Compressive modulus, E<sub>c</sub></td><td>0.795 MPa (measured, this pad)</td></tr>
+      </table>
+      <p style="margin-top:10px;">The datasheet itself reports only static/mechanical properties (hardness, tensile, tear, compression set) — typical for a general-purpose sealing/molding LSR — and doesn't include compressive or dynamic modulus directly, so the Gent (1958) Shore-A correlation was the starting estimate. The compression test shows Gent's generic curve — fit across many rubber families, not silicones specifically — overestimated this compound's real stiffness by more than 2×, which is exactly why a real test beats a hardness correlation. The dynamic modulus fields (E′@fn, E′@fexc) and tan δ are still <strong style="color:var(--text-1);">not</strong> independently confirmed — the natural-frequency data from the same test turned out to be a lateral/rocking (X-Y) wobble mode, not vertical bounce, so it measures shear stiffness and rocking inertia rather than the axial compression this tool models — it can't be used to correct E′ directly. Until genuine vertical-mode data exists, E′@fn/E′@fexc are provisionally set equal to the measured static value, which the warning banner below will flag as a frequency-independence assumption.</p>
+    </div>
+  </details>
+
+  <nav class="tabbar">
+    <button type="button" class="tab-btn active" data-tab="vibration"><span class="num">01</span> Vibration Isolator</button>
+    <button type="button" class="tab-btn" data-tab="shock"><span class="num">02</span> Shock / Impact Isolator</button>
+  </nav>
+
+  <!-- ============================= VIBRATION TAB ============================= -->
+  <section class="panel-section active" id="panel-vibration">
+    <div class="grid2">
+      <div class="col-inputs">
+
+        <div class="card">
+          <div class="card-head"><h3>Isolator Geometry</h3><span class="step">STEP 1</span></div>
+          <div class="card-body">
+            <div class="shape-select" id="vib-shape-select" data-target="vib"></div>
+            <div class="diagram-box"><svg id="vib-diagram" viewBox="0 0 400 190"></svg></div>
+            <div id="vib-dims"></div>
+            <div class="hint" id="vib-sf-hint"></div>
+            <div class="hint" style="margin-top:8px;border-top:1px dashed var(--line-strong);padding-top:8px;">ℹ This tool models vertical (axial/Z) compression dynamics only. Multi-pad mounts — especially tall/slender pads on a wide footprint — often rock or wobble laterally (X/Y) at a <em>lower</em> frequency than they bounce vertically, since lateral stiffness comes from shear (typically ~1/3 of the compression stiffness) with no shape-factor boost, plus rocking inertia. If you measure a natural frequency by eye or with a loose test rig, confirm it's actually vertical bounce and not a rocking mode — they're easy to conflate and governed by different physics.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Material Properties (yours)</h3><span class="step">STEP 2</span></div>
+          <div class="card-body">
+            <div class="shore-helper" id="v-calib-helper" style="border-color:var(--green);background:rgba(120,214,126,0.05);">
+              <div class="hint" style="margin-top:0;margin-bottom:8px;color:var(--green);">✓ Calibrate E<sub>c</sub> from your own load/deflection test (preferred over the Shore A estimate below).</div>
+              <div class="hint" style="margin-top:0;margin-bottom:10px;">Geometry below is the <strong style="color:var(--text-1);">test specimen you actually measured</strong> — independent from the "Isolator Geometry" design above. Changing your current design won't retroactively corrupt this calibration, and vice versa.</div>
+              <div class="shape-select" id="calib-shape-select" data-target="calib" style="margin-bottom:10px;"></div>
+              <div class="diagram-box" style="margin-bottom:12px;"><svg id="calib-diagram" viewBox="0 0 400 110"></svg></div>
+              <div id="calib-dims"></div>
+              <div class="field-row single">
+                <div class="field"><label>Number of isolators in this test <span class="unit">count</span></label><input type="number" id="v_calib_numiso" value="3" step="1" min="1"></div>
+              </div>
+              <div class="field-row">
+                <div class="field"><label>Test load 1 <span class="unit" id="u-t1l">kg (total)</span></label><input type="number" id="v_t1_load" value="5" step="any"></div>
+                <div class="field"><label>Deflection 1 <span class="unit" id="u-t1d">mm</span></label><input type="number" id="v_t1_defl" value="1.1" step="any"></div>
+              </div>
+              <div class="field-row">
+                <div class="field"><label>Test load 2 <span class="unit" id="u-t2l">kg (total)</span></label><input type="number" id="v_t2_load" value="9" step="any"></div>
+                <div class="field"><label>Deflection 2 <span class="unit" id="u-t2d">mm</span></label><input type="number" id="v_t2_defl" value="2.2" step="any"></div>
+              </div>
+              <div class="field-row">
+                <div class="field"><label>Test load 3 <span class="unit" id="u-t3l">kg (total)</span></label><input type="number" id="v_t3_load" value="13" step="any"></div>
+                <div class="field"><label>Deflection 3 <span class="unit" id="u-t3d">mm</span></label><input type="number" id="v_t3_defl" value="3.0" step="any"></div>
+              </div>
+              <div class="field-row single">
+                <div class="field"><label>Calibrated E<sub>c</sub> (regression through origin)</label><input type="text" id="v_calib_result" readonly tabindex="-1"></div>
+              </div>
+              <button type="button" class="fillbtn" id="v_calib_fill">↓ Use this calibrated value for the modulus field(s) below</button>
+              <div class="hint">Leave load/deflection rows blank to exclude. Static only — says nothing about E′(f<sub>n</sub>)/E′(f<sub>exc</sub>)/tan δ, which need real dynamic (vertical, non-rocking) data.</div>
+            </div>
+
+            <div class="shore-helper" id="v-shore-helper">
+              <div class="field-row">
+                <div class="field">
+                  <label>Shore A hardness <span class="unit">durometer</span></label>
+                  <input type="number" id="v_shoreA" value="42" step="any" min="0" max="100">
+                </div>
+                <div class="field">
+                  <label>Estimated modulus <span class="unit">Gent approx.</span></label>
+                  <input type="text" id="v_shoreEst" readonly tabindex="-1">
+                </div>
+              </div>
+              <button type="button" class="fillbtn" id="v_shore_fill">↓ Use this estimate for the modulus field(s) below</button>
+              <div class="hint">Gent (1958): E ≈ 0.0981(56+7.62336S) / 0.137505(254−2.54S), S = Shore A. Gives ≈1.82 MPa for Shore A 42 — but a real compression test on this exact material measured ≈0.795 MPa (already loaded below), so treat the Gent number here only as a fallback for materials you haven't tested yet.</div>
+            </div>
+
+            <div class="field-row" id="v-cs-row">
+              <div class="field">
+                <label id="v-cs-label">Compressive modulus, E<sub>c</sub> <span class="unit" id="u-cs">psi</span></label>
+                <input type="number" id="v_cs" value="0.795" step="any">
+              </div>
+              <div class="field">
+                <label id="v-pct-label">Target % deflection <span class="unit">%</span></label>
+                <input type="number" id="v_assumedPct" value="15" step="any">
+              </div>
+            </div>
+            <div class="hint" id="v-pct-hint" style="margin-bottom:10px;"></div>
+            <div class="field-row">
+              <div class="field">
+                <label>Dynamic modulus @ f<sub>n</sub>, E′(f<sub>n</sub>) <span class="unit" id="u-efn">psi</span></label>
+                <input type="number" id="v_efn" value="0.795" step="any">
+              </div>
+              <div class="field">
+                <label>Dynamic modulus @ f<sub>exc</sub>, E′(f<sub>exc</sub>) <span class="unit" id="u-efexc">psi</span></label>
+                <input type="number" id="v_efexc" value="0.795" step="any">
+              </div>
+            </div>
+            <div class="field-row single">
+              <div class="field">
+                <label>Tan delta @ f<sub>exc</sub> <span class="unit">unitless</span></label>
+                <input type="number" id="v_tandelta" value="0.05" step="any">
+              </div>
+            </div>
+            <div class="hint" id="v-material-hint">⚠ Tan delta has no Shore-A-style correlation — this 0.05 is a placeholder, not derived from your material. What's actually known: silicones engineered specifically for damping are formulated to hit tan δ ≥ 0.1–0.3; general-purpose sealing silicones like this one are typically well below that, but "well below" isn't a number. Get real DMA data before trusting the transmissibility result — this input has the single biggest effect on it.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Load &amp; Excitation</h3><span class="step">STEP 3</span></div>
+          <div class="card-body">
+            <div class="field-row">
+              <div class="field">
+                <label id="lbl-totalload">Total load <span class="unit" id="u-load">lb</span></label>
+                <input type="number" id="v_totalload" value="9" step="any">
+              </div>
+              <div class="field">
+                <label>Number of isolators</label>
+                <input type="number" id="v_numiso" value="4" step="1" min="1">
+              </div>
+            </div>
+            <div class="field-row single">
+              <div class="field">
+                <label>Excitation frequency, f<sub>exc</sub> <span class="unit">Hz</span></label>
+                <input type="number" id="v_fexc" value="50" step="any">
+              </div>
+            </div>
+            <div class="hint" id="v-perisolator"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Lateral / Rocking Layout</h3><span class="step">STEP 4</span></div>
+          <div class="card-body">
+            <div class="seg" id="v-layout-seg" style="margin-bottom:10px;">
+              <button type="button" data-layout="circular">Circular (n pads on radius R)</button>
+              <button type="button" data-layout="rect" class="active">Rectangular (4 pads, X × Y)</button>
+            </div>
+            <div class="diagram-box"><svg id="rock-diagram" viewBox="0 0 400 230"></svg></div>
+            <div class="field-row" id="v-circular-fields" style="display:none;">
+              <div class="field">
+                <label>Pad center distance from axis, R <span class="unit" id="u-radius">mm</span></label>
+                <input type="number" id="v_padradius" value="25" step="any">
+              </div>
+            </div>
+            <div class="field-row" id="v-rect-fields">
+              <div class="field">
+                <label>Pad spacing, X <span class="unit" id="u-padx">mm</span></label>
+                <input type="number" id="v_padX" value="60" step="any">
+              </div>
+              <div class="field">
+                <label>Pad spacing, Y <span class="unit" id="u-pady">mm</span></label>
+                <input type="number" id="v_padY" value="40" step="any">
+              </div>
+            </div>
+            <div class="field-row single">
+              <div class="field">
+                <label>CG height above <em>base</em> (pad bottom), H <span class="unit" id="u-cgheight">mm</span></label>
+                <input type="number" id="v_cgheight" value="125" step="any">
+              </div>
+            </div>
+            <div class="hint">X and Y are the full corner-to-corner pad spacing (not half). A rectangular footprint tips more easily along its <em>short</em> side — expect the Y-spacing (usually the narrower one) to govern the lower, more critical rocking mode. H is measured from the <strong style="color:var(--text-1);">bottom of the pads</strong>, not from where your equipment sits on top — check whether your measurement already includes pad thickness.</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="col-outputs">
+        <div class="warn-stack" id="vib-warnings"></div>
+        <div class="card">
+          <div class="card-head"><h3>Calculated Results — Vertical (Z axis)</h3></div>
+          <div class="results-grid" id="vib-results"></div>
+        </div>
+        <div class="warn-stack" id="rock-warnings"></div>
+        <div class="card">
+          <div class="card-head"><h3>Calculated Results — Lateral / Rocking (X-Y)</h3></div>
+          <div class="results-grid" id="rock-results"></div>
+        </div>
+        <details class="formulas">
+          <summary>Formulas used</summary>
+          <div class="formula-body" id="vib-formulas"></div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================= SHOCK TAB ============================= -->
+  <section class="panel-section" id="panel-shock">
+    <div class="grid2">
+      <div class="col-inputs">
+
+        <div class="card">
+          <div class="card-head"><h3>Isolator Geometry</h3><span class="step">STEP 1</span></div>
+          <div class="card-body">
+            <div class="shape-select" id="shk-shape-select" data-target="shk"></div>
+            <div class="diagram-box"><svg id="shk-diagram" viewBox="0 0 400 190"></svg></div>
+            <div id="shk-dims"></div>
+            <div class="hint" id="shk-sf-hint"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Spring Rate Reference</h3><span class="step">STEP 2</span></div>
+          <div class="card-body">
+            <div class="shore-helper" id="s-shore-helper">
+              <div class="field-row">
+                <div class="field">
+                  <label>Shore A hardness <span class="unit">durometer</span></label>
+                  <input type="number" id="s_shoreA" value="42" step="any" min="0" max="100">
+                </div>
+                <div class="field">
+                  <label>Estimated modulus <span class="unit">Gent approx.</span></label>
+                  <input type="text" id="s_shoreEst" readonly tabindex="-1">
+                </div>
+              </div>
+              <button type="button" class="fillbtn" id="s_shore_fill">↓ Use this estimate for the modulus field below</button>
+              <div class="hint">Same Gent (1958) approximation as the vibration tab — a first-order fit, weakest below Shore A ~40.</div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label id="s-cs-label">Compressive modulus, E<sub>c</sub> <span class="unit" id="u-cs2">psi</span></label>
+                <input type="number" id="s_cs" value="0.795" step="any">
+              </div>
+              <div class="field">
+                <label id="s-pct-label">Reference % deflection <span class="unit">%</span></label>
+                <input type="number" id="s_refpct" value="20" step="any">
+              </div>
+            </div>
+            <div class="field-row single">
+              <div class="field">
+                <label id="lbl-refload">Reference load at this % deflection <span class="unit" id="u-refload">lb</span></label>
+                <input type="number" id="s_refload" value="37.65" step="any">
+              </div>
+            </div>
+            <div class="hint">Load the isolator to the reference % deflection and record the load. Spring rate k = load ÷ static deflection at that point. Prefer a directly-measured static deflection? Toggle below.</div>
+            <div class="field-row single" style="margin-top:8px;">
+              <label style="font-family:var(--font-mono);font-size:0.68rem;color:var(--text-2);display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="checkbox" id="s_manual_dst" style="width:auto;" checked>
+                Enter measured static deflection directly instead of computing from C<sub>s</sub>
+              </label>
+            </div>
+            <div class="field-row single" id="s_manual_dst_row" style="display:block;">
+              <div class="field">
+                <label>Measured static deflection at reference load <span class="unit" id="u-manualdst">in</span></label>
+                <input type="number" id="s_manual_dst_val" value="0.9525" step="any">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Impact Scenario</h3><span class="step">STEP 3</span></div>
+          <div class="card-body">
+            <div class="seg" id="impact-type-seg">
+              <button type="button" data-type="vertical" class="active">Vertical drop</button>
+              <button type="button" data-type="horizontal">Horizontal impact</button>
+            </div>
+            <div class="diagram-box" style="margin-top:10px;"><svg id="impact-diagram" viewBox="0 0 400 140"></svg></div>
+            <div class="field-row" style="margin-top:10px;">
+              <div class="field">
+                <label id="lbl-impactweight">Component weight <span class="unit" id="u-impweight">lb</span></label>
+                <input type="number" id="s_impweight" value="0.1134" step="any">
+              </div>
+              <div class="field" id="s_dropheight_field">
+                <label>Drop height <span class="unit" id="u-dropheight">in</span></label>
+                <input type="number" id="s_dropheight" value="914.4" step="any">
+              </div>
+              <div class="field" id="s_velocity_field" style="display:none;">
+                <label>Impact velocity <span class="unit" id="u-velocity">in/s</span></label>
+                <input type="number" id="s_velocity" value="1.524" step="any">
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="col-outputs">
+        <div class="warn-stack" id="shk-warnings"></div>
+        <div class="card">
+          <div class="card-head"><h3>Calculated Results</h3></div>
+          <div class="results-grid" id="shk-results"></div>
+        </div>
+        <details class="formulas">
+          <summary>Formulas used</summary>
+          <div class="formula-body" id="shk-formulas"></div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <footer class="disclaimer">
+    <strong>Advisory tool, not a substitute for testing.</strong> Implements standard small-strain bonded-rubber mechanics: the shape-factor correction (Gent &amp; Lindley, 1959) for static deflection and dynamic spring rate, and standard forced-vibration transmissibility / shock energy-balance theory — general to any bonded elastomer, not tied to one manufacturer. Modulus and tan δ are whatever you entered (or estimated from Shore A via Gent's 1958 correlation) — accuracy is only as good as that input, and the tool will warn you when your static/dynamic moduli are set equal, since that treats the material as frequency-independent, which real elastomers generally aren't. This does not account for buckling, creep, temperature effects, or manufacturing/casting limitations, and the shape-factor formula itself is a small-strain approximation (reliable roughly up to SF≈1.2, axial strain ≲10%) — verify final designs against physical prototypes or your material supplier's own test data.
+    <br><br><strong>References:</strong> Gent, A.N. &amp; Lindley, P.B. (1959), "The Compression of Bonded Rubber Blocks," <em>Proc. IMechE</em> 173(1), 111–122 (shape-factor correction, (1+2·SF²)). Gent, A.N. (1958), "On the Relation between Indentation Hardness and Young's Modulus," <em>Trans. IRI</em> 34, 46 (Shore A → modulus estimate). Zhang, Y. et al. (2023), "Temperature and Frequency Dependence of the Dynamic Viscoelastic Properties of Silicone Rubber," <em>Polymers</em> 15(14), 3005 (frequency-dependent storage modulus in silicone rubber — basis for the frequency-independence warning above). Momentive Performance Materials, Silopren™ LSR 2640 Technical Data Sheet (loaded material reference).
+  </footer>
+
+</div>
+<script>
+/* ==========================================================================
+   Isolator Design Calculator — application logic
+   Standard elastomer/silicone isolator design: shape-factor (Gent & Lindley,
+   1959, bonded-rubber compression), static deflection, dynamic spring rate,
+   natural frequency, transmissibility, and shock response. Material modulus
+   is either entered directly or estimated from Shore A hardness via Gent's
+   (1958) hardness-modulus correlation. All key relations independently
+   cross-checked against primary rubber-mechanics literature.
+   ========================================================================== */
+
+/* ---------------------------- Unit conversion ---------------------------- */
+// Canonical storage is always Imperial (in, lb, psi, in/s). Display / entry
+// converts on the fly depending on the active unit system.
+const CONV = {
+  length:  { toMetric: v => v * 25.4,        toImperial: v => v / 25.4 },        // in <-> mm
+  pressure:{ toMetric: v => v * 0.00689476,  toImperial: v => v / 0.00689476 },  // psi <-> MPa
+  mass:    { toMetric: v => v * 0.453592,    toImperial: v => v / 0.453592 },    // lb <-> kg
+  velocity:{ toMetric: v => v * 0.0254,      toImperial: v => v / 0.0254 },      // in/s <-> m/s
+};
+const FIELD_KIND = {
+  v_cs:'pressure', v_efn:'pressure', v_efexc:'pressure', v_totalload:'mass',
+  s_cs:'pressure', s_refload:'mass', s_manual_dst_val:'length',
+  s_impweight:'mass', s_dropheight:'length', s_velocity:'velocity',
+  v_padradius:'length', v_cgheight:'length', v_padX:'length', v_padY:'length',
+  v_t1_load:'mass', v_t2_load:'mass', v_t3_load:'mass',
+  v_t1_defl:'length', v_t2_defl:'length', v_t3_defl:'length',
+};
+const UNIT_LABEL = {
+  imperial: { length:'in', pressure:'psi', mass:'lb', velocity:'in/s' },
+  metric:   { length:'mm', pressure:'MPa', mass:'kg', velocity:'m/s' },
+};
+
+let UNIT = 'metric'; // 'imperial' | 'metric'
+
+function toDisplay(kind, canonicalVal) {
+  if (!kind || UNIT === 'imperial') return canonicalVal;
+  return CONV[kind].toMetric(canonicalVal);
+}
+function toCanonical(kind, displayVal) {
+  if (!kind || UNIT === 'imperial') return displayVal;
+  return CONV[kind].toImperial(displayVal);
+}
+function round(v, n) {
+  const f = Math.pow(10, n);
+  return Math.round((v + Number.EPSILON) * f) / f;
+}
+
+/* ---------------------------- Shape definitions --------------------------- */
+const SHAPES = {
+  rect:   { label:'Rectangle', icon:'<rect x="3" y="6.5" width="18" height="11" rx="1"/>',
+            fields:[ {k:'L',label:'Length'}, {k:'W',label:'Width'}, {k:'t',label:'Thickness'} ],
+            defaults:{ L:4, W:4, t:2 } },
+  square: { label:'Square', icon:'<rect x="5" y="5" width="14" height="14" rx="1"/>',
+            fields:[ {k:'L',label:'Side length'}, {k:'t',label:'Thickness'} ],
+            defaults:{ L:4, t:2 } },
+  disc:   { label:'Disc', icon:'<circle cx="12" cy="12" r="9"/>',
+            fields:[ {k:'D',label:'Diameter'}, {k:'t',label:'Thickness'} ],
+            defaults:{ D:4, t:2 } },
+  ring:   { label:'Ring', icon:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/>',
+            fields:[ {k:'OD',label:'Outside diameter'}, {k:'ID',label:'Inside diameter'}, {k:'t',label:'Thickness'} ],
+            defaults:{ OD:4, ID:2, t:2 } },
+};
+
+function shapeFactor(shape, dims) {
+  let SF, loadedArea;
+  switch (shape) {
+    case 'rect':
+      loadedArea = dims.L * dims.W;
+      SF = loadedArea / (2 * dims.t * (dims.L + dims.W));
+      break;
+    case 'square':
+      loadedArea = dims.L * dims.L;
+      SF = dims.L / (4 * dims.t);
+      break;
+    case 'disc':
+      loadedArea = Math.PI / 4 * dims.D * dims.D;
+      SF = dims.D / (4 * dims.t);
+      break;
+    case 'ring':
+      loadedArea = Math.PI / 4 * (dims.OD * dims.OD - dims.ID * dims.ID);
+      SF = (dims.OD - dims.ID) / (4 * dims.t);
+      break;
+  }
+  return { SF, loadedArea };
+}
+
+/* ---------------------------- App state ---------------------------- */
+const state = {
+  vib: { shape:'disc', padLayout:'rect', dims:{ rect:{...SHAPES.rect.defaults}, square:{...SHAPES.square.defaults}, disc:{D:25/25.4, t:30/25.4}, ring:{...SHAPES.ring.defaults} } },
+  shk: { shape:'rect', dims:{ rect:{L:1.75,W:0.5,t:0.1875}, square:{...SHAPES.square.defaults}, disc:{...SHAPES.disc.defaults}, ring:{...SHAPES.ring.defaults} } },
+  calib: { shape:'disc', dims:{ rect:{...SHAPES.rect.defaults}, square:{...SHAPES.square.defaults}, disc:{D:25/25.4, t:30/25.4}, ring:{...SHAPES.ring.defaults} } },
+  impactType: 'vertical',
+  manualDst: true,
+};
+
+/* ---------------------------- Shore A -> modulus (Gent's approximation) ---------------------------- */
+// Gent, A.N. (1958), "On the relation between indentation hardness and Young's modulus",
+// Trans. IRI 34, 46. E (MPa) = 0.0981(56+7.62336S) / [0.137505(254-2.54S)], S = Shore A (0-100).
+// Treated as a good first-order fit for Shore A ~20-80 (Gent himself notes reduced confidence <40A).
+function shoreAtoModulusMPa(S) {
+  if (isNaN(S) || S <= 0 || S >= 100) return null;
+  const num = 0.0981 * (56 + 7.62336 * S);
+  const den = 0.137505 * (254 - 2.54 * S);
+  if (den <= 0) return null;
+  return num / den; // MPa
+}
+
+/* ---------------------------- SVG diagram ---------------------------- */
+function svgDiagram(shape, dims, opts) {
+  opts = opts || {};
+  const unitLen = UNIT_LABEL[UNIT].length;
+  const dL = (v) => round(toDisplay('length', v), UNIT==='imperial'?3:2);
+
+  // ---- top view (plan) ----
+  let topSvg = '';
+  const cx = 95, cy = 95, boxMax = 108;
+  if (shape === 'rect' || shape === 'square') {
+    const L = dims.L, W = shape==='square'?dims.L:dims.W;
+    const maxDim = Math.max(L, W);
+    let scale = Math.min(boxMax / maxDim, 34);
+    let pxW = Math.max(L*scale, 20), pxH = Math.max(W*scale, 20);
+    const x0 = cx-pxW/2, y0 = cy-pxH/2;
+    topSvg += `<rect x="${x0}" y="${y0}" width="${pxW}" height="${pxH}" fill="rgba(95,208,214,0.08)" stroke="#5fd0d6" stroke-width="1.4"/>`;
+    // dim lines
+    topSvg += dimLineH(x0, y0-14, x0+pxW, y0-14, `${shape==='square'?'L':'L'} = ${dL(L)} ${unitLen}`);
+    if (shape==='rect') topSvg += dimLineV(x0-14, y0, x0-14, y0+pxH, `W = ${dL(W)} ${unitLen}`);
+  } else if (shape === 'disc') {
+    const D = dims.D;
+    let scale = Math.min(boxMax / D, 34);
+    let r = Math.max(D*scale/2, 12);
+    topSvg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(95,208,214,0.08)" stroke="#5fd0d6" stroke-width="1.4"/>`;
+    topSvg += dimLineH(cx-r, cy+r+14, cx+r, cy+r+14, `D = ${dL(D)} ${unitLen}`);
+  } else if (shape === 'ring') {
+    const OD = dims.OD, ID = dims.ID;
+    let scale = Math.min(boxMax / OD, 34);
+    let rOut = Math.max(OD*scale/2, 16);
+    let rIn = Math.max(rOut * (ID/OD), 4);
+    topSvg += `<circle cx="${cx}" cy="${cy}" r="${rOut}" fill="rgba(95,208,214,0.08)" stroke="#5fd0d6" stroke-width="1.4"/>`;
+    topSvg += `<circle cx="${cx}" cy="${cy}" r="${rIn}" fill="#0e1e2f" stroke="#5fd0d6" stroke-width="1.2"/>`;
+    topSvg += dimLineH(cx-rOut, cy+rOut+14, cx+rOut, cy+rOut+14, `OD = ${dL(OD)} ${unitLen}`);
+    topSvg += `<text x="${cx}" y="${cy+3}" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#7e94a8">ID=${dL(ID)}</text>`;
+  }
+
+  // ---- side / section view ----
+  const t = dims.t;
+  const sx = 250, plateW = 108;
+  let sideScale = Math.min(70 / Math.max(t,0.0001), 40);
+  let pxT = Math.max(Math.min(t*sideScale, 90), 16);
+  const plateH = 8;
+  const topPlateY = 95 - pxT/2 - plateH - 10;
+  const padY = topPlateY + plateH;
+  const botPlateY = padY + pxT;
+
+  let side = '';
+  // load arrow
+  side += `<line x1="${sx+plateW/2}" y1="${topPlateY-24}" x2="${sx+plateW/2}" y2="${topPlateY-4}" stroke="#f2a341" stroke-width="2"/>`;
+  side += `<polygon points="${sx+plateW/2-5},${topPlateY-9} ${sx+plateW/2+5},${topPlateY-9} ${sx+plateW/2},${topPlateY-2}" fill="#f2a341"/>`;
+  side += `<text x="${sx+plateW/2}" y="${topPlateY-28}" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#f2a341">F</text>`;
+  // top plate
+  side += `<rect x="${sx}" y="${topPlateY}" width="${plateW}" height="${plateH}" fill="#b9cddf"/>`;
+  // pad
+  side += `<rect x="${sx}" y="${padY}" width="${plateW}" height="${pxT}" fill="rgba(242,163,65,0.13)" stroke="#f2a341" stroke-width="1.4"/>`;
+  // bottom plate
+  side += `<rect x="${sx}" y="${botPlateY}" width="${plateW}" height="${plateH}" fill="#b9cddf"/>`;
+  // ground hatch
+  side += `<line x1="${sx-4}" y1="${botPlateY+plateH+6}" x2="${sx+plateW+4}" y2="${botPlateY+plateH+6}" stroke="#7e94a8" stroke-width="1.2"/>`;
+  for (let i=0;i<9;i++){
+    const hx = sx-4 + i*(plateW+8)/8;
+    side += `<line x1="${hx}" y1="${botPlateY+plateH+6}" x2="${hx-6}" y2="${botPlateY+plateH+14}" stroke="#7e94a8" stroke-width="1"/>`;
+  }
+  // thickness dim
+  side += dimLineV(sx+plateW+14, padY, sx+plateW+14, padY+pxT, `t = ${dL(t)} ${unitLen}`, true);
+
+  return `<g>${topSvg}</g><g>${side}</g>
+    <text x="200" y="182" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#4f6274">PLAN VIEW · SECTION VIEW — schematic, not to scale</text>`;
+}
+function dimLineH(x1,y,x2,y2,label){
+  return `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="#7e94a8" stroke-width="1"/>
+    <line x1="${x1}" y1="${y-4}" x2="${x1}" y2="${y+4}" stroke="#7e94a8" stroke-width="1"/>
+    <line x1="${x2}" y1="${y-4}" x2="${x2}" y2="${y+4}" stroke="#7e94a8" stroke-width="1"/>
+    <text x="${(x1+x2)/2}" y="${y-6}" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" fill="#b9cddf">${label}</text>`;
+}
+function dimLineV(x,y1,x2,y2,label,right){
+  return `<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="#7e94a8" stroke-width="1"/>
+    <line x1="${x-4}" y1="${y1}" x2="${x+4}" y2="${y1}" stroke="#7e94a8" stroke-width="1"/>
+    <line x1="${x-4}" y1="${y2}" x2="${x+4}" y2="${y2}" stroke="#7e94a8" stroke-width="1"/>
+    <text x="${x + (right?8:-8)}" y="${(y1+y2)/2+3}" text-anchor="${right?'start':'end'}" font-family="IBM Plex Mono" font-size="8.5" fill="#b9cddf">${label}</text>`;
+}
+
+/* ---------------------------- Lateral / Rocking diagram ---------------------------- */
+function svgRockingDiagram(Rdisp, Hdisp, lenUnit, numIso, unstable) {
+  const R = Math.max(Rdisp, 0.001), H = Math.max(Hdisp, 0.001);
+  const cx = 200, padY = 195, groundY = 210;
+  const Rscale = Math.min(140/R, 3.2);
+  const Rpx = Math.max(Math.min(R*Rscale, 150), 26);
+  const Hscale = Math.min(115/H, 2.6);
+  const Hpx = Math.max(Math.min(H*Hscale, 150), 30);
+  const cgY = padY - Hpx;
+  const tilt = unstable ? -7 : 0; // visually tip the mass if unstable
+
+  let s = '';
+  // ground
+  s += `<line x1="20" y1="${groundY}" x2="380" y2="${groundY}" stroke="#7e94a8" stroke-width="1.2"/>`;
+  for (let i=0;i<15;i++){ const hx=20+i*24; s += `<line x1="${hx}" y1="${groundY}" x2="${hx-7}" y2="${groundY+8}" stroke="#7e94a8" stroke-width="1"/>`; }
+  // central axis (dashed)
+  s += `<line x1="${cx}" y1="14" x2="${cx}" y2="${groundY}" stroke="#5fd0d6" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>`;
+  s += `<text x="${cx}" y="12" text-anchor="middle" font-family="IBM Plex Mono" font-size="7.5" fill="#5fd0d6" opacity="0.7">AXIS</text>`;
+  // pad plane
+  s += `<line x1="${cx-Rpx-30}" y1="${padY}" x2="${cx+Rpx+30}" y2="${padY}" stroke="#7e94a8" stroke-width="1" stroke-dasharray="2,2" opacity="0.6"/>`;
+  s += `<text x="${cx-Rpx-32}" y="${padY+3}" text-anchor="end" font-family="IBM Plex Mono" font-size="7.5" fill="#7e94a8">PAD PLANE</text>`;
+  // two pads (near/far of the symmetric ring)
+  [cx-Rpx, cx+Rpx].forEach(px => {
+    s += `<rect x="${px-14}" y="${padY-6}" width="28" height="12" rx="1" fill="rgba(242,163,65,0.15)" stroke="#f2a341" stroke-width="1.3"/>`;
+  });
+  // R dimension (from axis to right pad)
+  s += dimLineH(cx, padY+20, cx+Rpx, padY+20, `R = ${fmt(Rdisp,1)} ${lenUnit}`);
+  // mass silhouette, resting on a thin base plate at pad plane, CG vertically centered in it
+  const bodyTop = cgY - Hpx*0.9, bodyBot = padY;
+  const bodyW = 64;
+  s += `<g transform="rotate(${tilt} ${cx} ${bodyBot})">`;
+  s += `<rect x="${cx-6}" y="${padY-16}" width="12" height="16" fill="#b9cddf"/>`; // base stub
+  s += `<rect x="${cx-bodyW/2}" y="${bodyTop}" width="${bodyW}" height="${bodyBot-16-bodyTop}" rx="4" fill="rgba(95,208,214,0.10)" stroke="#5fd0d6" stroke-width="1.4"/>`;
+  // CG marker (crosshair)
+  s += `<circle cx="${cx}" cy="${cgY}" r="6" fill="none" stroke="#f2a341" stroke-width="1.6"/>`;
+  s += `<line x1="${cx-9}" y1="${cgY}" x2="${cx+9}" y2="${cgY}" stroke="#f2a341" stroke-width="1.2"/>`;
+  s += `<line x1="${cx}" y1="${cgY-9}" x2="${cx}" y2="${cgY+9}" stroke="#f2a341" stroke-width="1.2"/>`;
+  s += `</g>`;
+  s += `<text x="${cx}" y="${bodyTop-8}" text-anchor="middle" font-family="IBM Plex Mono" font-size="7.5" fill="#f2a341">CG</text>`;
+  // H dimension (pad plane to CG), left side
+  s += dimLineV(cx-Rpx-30, padY, cx-Rpx-30, cgY, `H = ${fmt(Hdisp,1)} ${lenUnit}`, false);
+  // motion indicators
+  if (unstable) {
+    s += `<text x="${cx+bodyW/2+34}" y="${cgY}" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#ff6b5e">⚠ TIPS</text>`;
+  } else {
+    // rocking arrow (curved, near top of body)
+    const ry = bodyTop+6;
+    s += `<path d="M ${cx-20} ${ry} A 20 10 0 0 1 ${cx+20} ${ry}" stroke="#ff6b5e" stroke-width="1.4" fill="none" marker-end="url(#arrowRock)"/>`;
+    s += `<path d="M ${cx+20} ${ry} A 20 10 0 0 1 ${cx-20} ${ry}" stroke="#ff6b5e" stroke-width="1.4" fill="none" stroke-dasharray="2,2" opacity="0.5"/>`;
+    s += `<text x="${cx}" y="${ry-8}" text-anchor="middle" font-family="IBM Plex Mono" font-size="7.5" fill="#ff6b5e">rock</text>`;
+  }
+  s += `<defs><marker id="arrowRock" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#ff6b5e"/></marker></defs>`;
+  s += `<text x="200" y="226" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#4f6274">${numIso} PADS ON A SYMMETRIC RING — SCHEMATIC, NOT TO SCALE</text>`;
+  return s;
+}
+
+function svgRockingDiagramRect(Xdisp, Ydisp, Hdisp, lenUnit, unstable) {
+  const X = Math.max(Xdisp, 0.001), Y = Math.max(Ydisp, 0.001);
+  // ---- left: top view, 4 pads at rectangle corners ----
+  const cx = 110, cy = 95;
+  const scaleX = Math.min(75/X, 3), scaleY = Math.min(65/Y, 3);
+  const hx = Math.max(Math.min(X*scaleX/2, 90), 24); // half-width px
+  const hy = Math.max(Math.min(Y*scaleY/2, 75), 20); // half-height px
+  let s = '';
+  s += `<line x1="${cx-hx-25}" y1="${cy}" x2="${cx+hx+25}" y2="${cy}" stroke="#5fd0d6" stroke-width="1" stroke-dasharray="3,3" opacity="0.4"/>`;
+  s += `<line x1="${cx}" y1="${cy-hy-20}" x2="${cx}" y2="${cy+hy+20}" stroke="#5fd0d6" stroke-width="1" stroke-dasharray="3,3" opacity="0.4"/>`;
+  [[hx,hy],[hx,-hy],[-hx,hy],[-hx,-hy]].forEach(([dx,dy]) => {
+    s += `<circle cx="${cx+dx}" cy="${cy+dy}" r="9" fill="rgba(242,163,65,0.15)" stroke="#f2a341" stroke-width="1.4"/>`;
+  });
+  s += `<circle cx="${cx}" cy="${cy}" r="2" fill="#5fd0d6"/>`;
+  s += dimLineV(cx-hx-14, cy-hy, cx-hx-14, cy+hy, `X = ${fmt(Xdisp,1)}`, false);
+  s += dimLineH(cx-hx, cy+hy+16, cx+hx, cy+hy+16, `Y = ${fmt(Ydisp,1)} ${lenUnit}`);
+  s += `<text x="${cx}" y="20" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#7e94a8">TOP VIEW</text>`;
+
+  // ---- right: side view, H indicator (same idea as circular diagram, single pad) ----
+  const sx = 300, padY = 195;
+  const Hscale = Math.min(115/Math.max(Hdisp,1), 2.6);
+  const Hpx = Math.max(Math.min(Hdisp*Hscale, 150), 30);
+  const cgY = padY - Hpx;
+  const tilt = unstable ? -7 : 0;
+  s += `<line x1="${sx-60}" y1="${padY}" x2="${sx+60}" y2="${padY}" stroke="#7e94a8" stroke-width="1" stroke-dasharray="2,2" opacity="0.6"/>`;
+  s += `<rect x="${sx-14}" y="${padY-6}" width="28" height="12" rx="1" fill="rgba(242,163,65,0.15)" stroke="#f2a341" stroke-width="1.3"/>`;
+  const bodyTop = cgY - Hpx*0.9, bodyBot = padY, bodyW = 60;
+  s += `<g transform="rotate(${tilt} ${sx} ${bodyBot})">`;
+  s += `<rect x="${sx-6}" y="${padY-16}" width="12" height="16" fill="#b9cddf"/>`;
+  s += `<rect x="${sx-bodyW/2}" y="${bodyTop}" width="${bodyW}" height="${bodyBot-16-bodyTop}" rx="4" fill="rgba(95,208,214,0.10)" stroke="#5fd0d6" stroke-width="1.4"/>`;
+  s += `<circle cx="${sx}" cy="${cgY}" r="6" fill="none" stroke="#f2a341" stroke-width="1.6"/>`;
+  s += `<line x1="${sx-9}" y1="${cgY}" x2="${sx+9}" y2="${cgY}" stroke="#f2a341" stroke-width="1.2"/>`;
+  s += `<line x1="${sx}" y1="${cgY-9}" x2="${sx}" y2="${cgY+9}" stroke="#f2a341" stroke-width="1.2"/>`;
+  s += `</g>`;
+  s += `<text x="${sx}" y="${bodyTop-8}" text-anchor="middle" font-family="IBM Plex Mono" font-size="7.5" fill="#f2a341">CG</text>`;
+  s += dimLineV(sx-bodyW/2-24, padY, sx-bodyW/2-24, cgY, `H = ${fmt(Hdisp,1)} ${lenUnit}`, false);
+  s += `<text x="${sx}" y="20" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#7e94a8">SIDE VIEW</text>`;
+  if (unstable) {
+    s += `<text x="${sx+bodyW/2+38}" y="${cgY}" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#ff6b5e">⚠ TIPS</text>`;
+  }
+  s += `<text x="200" y="226" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#4f6274">4 PADS AT RECTANGLE CORNERS — SCHEMATIC, NOT TO SCALE</text>`;
+  return s;
+}
+
+/* ---------------------------- Compression-test calibration diagram ---------------------------- */
+function svgCalibDiagram() {
+  const cx1 = 110, cx2 = 290, plateW = 90, y0 = 20, plateH = 7;
+  const t1 = 55, t2 = 40; // px, undeformed vs compressed pad height (illustrative)
+  let s = '';
+  // BEFORE
+  s += `<text x="${cx1}" y="14" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#7e94a8">BEFORE</text>`;
+  s += `<rect x="${cx1-plateW/2}" y="${y0}" width="${plateW}" height="${plateH}" fill="#b9cddf"/>`;
+  s += `<rect x="${cx1-plateW/2}" y="${y0+plateH}" width="${plateW}" height="${t1}" fill="rgba(95,208,214,0.10)" stroke="#5fd0d6" stroke-width="1.3"/>`;
+  s += `<rect x="${cx1-plateW/2}" y="${y0+plateH+t1}" width="${plateW}" height="${plateH}" fill="#b9cddf"/>`;
+  s += `<text x="${cx1}" y="${y0+plateH+t1+plateH+14}" text-anchor="middle" font-family="IBM Plex Mono" font-size="7.5" fill="#7e94a8">thickness t</text>`;
+
+  // AFTER (compressed, with load arrow)
+  s += `<text x="${cx2}" y="14" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#f2a341">AFTER — under load F</text>`;
+  s += `<line x1="${cx2}" y1="${y0-14}" x2="${cx2}" y2="${y0-2}" stroke="#f2a341" stroke-width="2"/>`;
+  s += `<polygon points="${cx2-5},${y0-7} ${cx2+5},${y0-7} ${cx2},${y0-1}" fill="#f2a341"/>`;
+  s += `<rect x="${cx2-plateW/2}" y="${y0}" width="${plateW}" height="${plateH}" fill="#b9cddf"/>`;
+  s += `<rect x="${cx2-plateW/2}" y="${y0+plateH}" width="${plateW}" height="${t2}" fill="rgba(242,163,65,0.13)" stroke="#f2a341" stroke-width="1.4"/>`;
+  s += `<rect x="${cx2-plateW/2}" y="${y0+plateH+t2}" width="${plateW}" height="${plateH}" fill="#b9cddf"/>`;
+  // dashed original outline for comparison
+  s += `<line x1="${cx2-plateW/2-6}" y1="${y0+plateH}" x2="${cx2-plateW/2-6}" y2="${y0+plateH+t1}" stroke="#7e94a8" stroke-width="1" stroke-dasharray="2,2"/>`;
+  s += dimLineV(cx2+plateW/2+14, y0+plateH+t2, cx2+plateW/2+14, y0+plateH+t1, `δ`, true);
+  s += `<text x="${cx2}" y="${y0+plateH+t1+plateH+14}" text-anchor="middle" font-family="IBM Plex Mono" font-size="7.5" fill="#7e94a8">measured deflection</text>`;
+
+  s += `<text x="200" y="106" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#4f6274">RECORD F (OR MASS) AND δ AT EACH TEST LOAD</text>`;
+  return s;
+}
+
+/* ---------------------------- Shock impact-scenario diagram ---------------------------- */
+function svgImpactDiagram(type) {
+  const cx = 200, padY = 100, padW = 90, padH = 16;
+  let s = '';
+  // pad + ground
+  s += `<rect x="${cx-padW/2}" y="${padY}" width="${padW}" height="${padH}" fill="rgba(242,163,65,0.13)" stroke="#f2a341" stroke-width="1.4"/>`;
+  s += `<line x1="${cx-padW/2-10}" y1="${padY+padH+4}" x2="${cx+padW/2+10}" y2="${padY+padH+4}" stroke="#7e94a8" stroke-width="1.2"/>`;
+  for (let i=0;i<9;i++){ const hx=cx-padW/2-10+i*(padW+20)/8; s += `<line x1="${hx}" y1="${padY+padH+4}" x2="${hx-6}" y2="${padY+padH+11}" stroke="#7e94a8" stroke-width="1"/>`; }
+
+  if (type === 'vertical') {
+    const massY = 25;
+    s += `<rect x="${cx-16}" y="${massY}" width="32" height="22" rx="2" fill="rgba(95,208,214,0.15)" stroke="#5fd0d6" stroke-width="1.4"/>`;
+    s += `<line x1="${cx}" y1="${massY+22}" x2="${cx}" y2="${padY-6}" stroke="#7e94a8" stroke-width="1" stroke-dasharray="3,3"/>`;
+    s += `<line x1="${cx}" y1="${massY+30}" x2="${cx}" y2="${padY-14}" stroke="#f2a341" stroke-width="2"/>`;
+    s += `<polygon points="${cx-5},${padY-19} ${cx+5},${padY-19} ${cx},${padY-11}" fill="#f2a341"/>`;
+    s += dimLineV(cx-45, massY+22, cx-45, padY-4, 'h', false);
+    s += `<text x="${cx}" y="18" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5fd0d6">component</text>`;
+    s += `<text x="200" y="140" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#4f6274">FREE-FALL DROP HEIGHT h ONTO PAD</text>`;
+  } else {
+    const massX = 60, massY = padY - 25;
+    s += `<rect x="${massX-16}" y="${massY-11}" width="32" height="22" rx="2" fill="rgba(95,208,214,0.15)" stroke="#5fd0d6" stroke-width="1.4"/>`;
+    s += `<line x1="${massX+16}" y1="${massY}" x2="${cx-padW/2-8}" y2="${massY}" stroke="#f2a341" stroke-width="2"/>`;
+    s += `<polygon points="${cx-padW/2-13},${massY-5} ${cx-padW/2-13},${massY+5} ${cx-padW/2-5},${massY}" fill="#f2a341"/>`;
+    s += `<text x="${(massX+cx-padW/2)/2}" y="${massY-8}" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#f2a341">v</text>`;
+    s += `<text x="${massX}" y="${massY-18}" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#5fd0d6">component</text>`;
+    s += `<text x="200" y="140" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#4f6274">LATERAL IMPACT AT VELOCITY v INTO PAD</text>`;
+  }
+  return s;
+}
+
+/* ---------------------------- Rendering: shape selector + dims ---------------------------- */
+function renderShapeSelector(target) {
+  const container = document.getElementById(`${target}-shape-select`);
+  container.innerHTML = Object.keys(SHAPES).map(key => {
+    const s = SHAPES[key];
+    const active = state[target].shape === key ? 'active' : '';
+    return `<button type="button" data-shape="${key}" class="${active}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">${s.icon}</svg>
+      ${s.label}
+    </button>`;
+  }).join('');
+  container.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state[target].shape = btn.dataset.shape;
+      renderShapeSelector(target);
+      renderDimFields(target);
+      recalc();
+    });
+  });
+}
+
+function renderDimFields(target) {
+  const shape = state[target].shape;
+  const def = SHAPES[shape];
+  const dims = state[target].dims[shape];
+  const container = document.getElementById(`${target}-dims`);
+  const unitLen = UNIT_LABEL[UNIT].length;
+  const rows = [];
+  for (let i=0;i<def.fields.length;i+=2){
+    const pair = def.fields.slice(i,i+2);
+    rows.push(`<div class="field-row${pair.length===1?' single':''}">` + pair.map(f => `
+      <div class="field">
+        <label>${f.label} <span class="unit">${unitLen}</span></label>
+        <input type="number" step="any" data-dimkey="${f.k}" value="${round(toDisplay('length', dims[f.k]), UNIT==='imperial'?3:2)}">
+      </div>`).join('') + `</div>`);
+  }
+  container.innerHTML = rows.join('');
+  container.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const k = inp.dataset.dimkey;
+      const v = parseFloat(inp.value);
+      if (!isNaN(v)) dims[k] = toCanonical('length', v);
+      recalc();
+    });
+  });
+}
+
+/* ---------------------------- Formatting ---------------------------- */
+function fmt(v, decimals) {
+  if (v === undefined || v === null || isNaN(v) || !isFinite(v)) return '—';
+  if (decimals !== undefined) return v.toFixed(decimals);
+  const a = Math.abs(v);
+  if (a >= 1000) return v.toLocaleString(undefined, {maximumFractionDigits:0});
+  if (a >= 100) return v.toFixed(1);
+  if (a >= 1) return v.toFixed(3);
+  if (a >= 0.001) return v.toFixed(5);
+  return v.toExponential(3);
+}
+
+/* ============================================================
+   VIBRATION TAB
+   ============================================================ */
+function readVibInputs() {
+  const shape = state.vib.shape;
+  const dims = state.vib.dims[shape]; // canonical inches
+  const cs = toCanonical('pressure', parseFloat(document.getElementById('v_cs').value));
+  const assumedPct = parseFloat(document.getElementById('v_assumedPct').value);
+  const efn = toCanonical('pressure', parseFloat(document.getElementById('v_efn').value));
+  const efexc = toCanonical('pressure', parseFloat(document.getElementById('v_efexc').value));
+  const tanDelta = parseFloat(document.getElementById('v_tandelta').value);
+  const totalLoad = toCanonical('mass', parseFloat(document.getElementById('v_totalload').value));
+  const numIso = parseFloat(document.getElementById('v_numiso').value) || 1;
+  const fexc = parseFloat(document.getElementById('v_fexc').value);
+  const padLayout = state.vib.padLayout;
+  const padRadius = toCanonical('length', parseFloat(document.getElementById('v_padradius').value));
+  const padX = toCanonical('length', parseFloat(document.getElementById('v_padX').value));
+  const padY = toCanonical('length', parseFloat(document.getElementById('v_padY').value));
+  const cgHeight = toCanonical('length', parseFloat(document.getElementById('v_cgheight').value));
+  return { shape, dims, cs, assumedPct, efn, efexc, tanDelta, totalLoad, numIso, fexc, padLayout, padRadius, padX, padY, cgHeight };
+}
+
+function calcVibration(inp) {
+  // inp.totalLoad is canonical Imperial (lb). In Imperial mode this is a force (lbf).
+  // In Metric mode the same numeric "lb" entry is treated as pound-mass and converted to kg.
+  const loadPerLb = inp.totalLoad / inp.numIso;
+  let SF, loadedArea, thickness, g, loadForCalc, EfnForCalc, EfexcForCalc, csForCalc;
+
+  if (UNIT === 'imperial') {
+    const sfr = shapeFactor(inp.shape, inp.dims);
+    SF = sfr.SF; loadedArea = sfr.loadedArea; thickness = inp.dims.t;
+    g = 386.1; loadForCalc = loadPerLb; EfnForCalc = inp.efn; EfexcForCalc = inp.efexc; csForCalc = inp.cs;
+  } else {
+    // Work in a fully consistent mm / N / MPa / kg system (1 MPa = 1 N/mm^2, so
+    // stress(MPa) x area(mm^2) = force(N) directly, no extra scaling needed).
+    const mmDims = {}; Object.keys(inp.dims).forEach(k => mmDims[k] = inp.dims[k]*25.4);
+    const sfr = shapeFactor(inp.shape, mmDims);
+    SF = sfr.SF; loadedArea = sfr.loadedArea; thickness = mmDims.t;
+    g = 9.80665;
+    loadForCalc = loadPerLb * 0.453592;  // mass per isolator, kg
+    csForCalc = inp.cs * 0.00689476;     // psi (canonical) -> MPa
+    EfnForCalc = inp.efn * 0.00689476;
+    EfexcForCalc = inp.efexc * 0.00689476;
+  }
+
+  const compressiveModulus = csForCalc;
+  const correctedModulus = compressiveModulus * (1 + 2*SF*SF);
+
+  let staticDeflection, Kdyn, fn, forcePerIsolator;
+  if (UNIT === 'imperial') {
+    staticDeflection = (loadForCalc * thickness) / (correctedModulus * loadedArea);
+    Kdyn = (EfnForCalc * (1+2*SF*SF) * loadedArea) / thickness;
+    fn = (1/(2*Math.PI)) * Math.sqrt((Kdyn*g)/loadForCalc);
+    forcePerIsolator = loadForCalc;
+  } else {
+    forcePerIsolator = loadForCalc * g; // N  (mass kg x 9.80665)
+    staticDeflection = (forcePerIsolator * thickness) / (correctedModulus * loadedArea); // mm
+    Kdyn = (EfnForCalc * (1+2*SF*SF) * loadedArea) / thickness; // N/mm
+    fn = (1/(2*Math.PI)) * Math.sqrt((Kdyn*1000)/loadForCalc); // Kdyn -> N/m ; loadForCalc = mass kg
+  }
+  const pctDeflection = (staticDeflection/thickness)*100;
+  const r = inp.fexc / fn;
+  const Grdyn = EfnForCalc / EfexcForCalc;
+  const T = Math.sqrt(1+tanD2(inp.tanDelta)) / Math.sqrt(Math.pow(1-r*r*Grdyn,2) + tanD2(inp.tanDelta));
+  const pctIsolation = (1-T)*100;
+  const Q = Math.sqrt(1+tanD2(inp.tanDelta)) / inp.tanDelta;
+
+  return { SF, loadedArea, thickness, loadPer: loadPerLb, forcePerIsolator, compressiveModulus, correctedModulus,
+           staticDeflection, pctDeflection, Kdyn, fn, r, Grdyn, T, pctIsolation, Q, assumedPct: inp.assumedPct };
+}
+function tanD2(td){ return td*td; }
+
+/* ---------------------------- Lateral / rocking (X-Y wobble) ---------------------------- */
+// Relation to vertical: lateral (shear) stiffness per pad has NO shape-factor boost
+// (that boost only comes from compression bulging against bonded plates), and
+// G ~= E/3 for near-incompressible rubber (Poisson's ratio ~0.499-0.5):
+//   k_lat = k_v / (3*(1+2*SF^2))
+// Rocking is modeled as a point mass M at height H above a base pivot (the fixed/bottom
+// side of the pads). Two restoring terms per mode:
+//   (1) vertical "see-saw": pad tops compress/extend as the body tips, lever arm = pad's
+//       horizontal offset from the tipping axis
+//   (2) lateral/shear: pad tops sit at height t (pad thickness) above the pivot, so they
+//       ALSO displace sideways by ~t*theta regardless of layout -> n*k_lat*t^2 (same for
+//       every mode, every pad participates)
+// CIRCULAR layout (n pads symmetric on radius R): 3-fold+ rotational symmetry makes
+// rocking stiffness the SAME in every direction, so one R and one K_theta suffice:
+//   K_theta = n*(k_v*R^2 + k_lat*t^2) - Weight*H
+// RECTANGULAR layout (4 pads at corners of X (full) x Y (full) spacing): only 2-fold
+// symmetry, so rocking stiffness DIFFERS by direction -- every pad's X-offset is X/2
+// regardless of Y, and vice versa, giving two independent modes:
+//   K_pitch = n*(k_v*(X/2)^2 + k_lat*t^2) - Weight*H   (tips along X, lever arm X/2)
+//   K_roll  = n*(k_v*(Y/2)^2 + k_lat*t^2) - Weight*H   (tips along Y, lever arm Y/2)
+// In both cases: f = (1/2pi)*sqrt(K_theta / (M*H^2)), undefined/unstable if K_theta <= 0.
+// Validated against real 3-point drop/deflection + wobble-frequency test data (circular
+// case, R=25mm, H=120-130mm): including term (2) cut the model's error from ~60-80% low
+// to ~10-40% low vs term (1) alone. Remaining gap is believed to be coupled translation-
+// rotation effects (CG isn't in the pad plane) a single-DOF model can't capture, plus the
+// neglected self-rotational inertia of the body about its own CG -- treat all outputs
+// here as a first-order, somewhat conservative (real frequency probably a bit higher)
+// estimate, not a precise multi-mode solution.
+function calcLateralRocking(inp, out) {
+  const klat = out.Kdyn / (3 * (1 + 2*out.SF*out.SF)); // per-pad, N/mm (metric) or lb/in (imperial)
+  const g = UNIT === 'imperial' ? 386.1 : 9.80665;
+  const lenConv = UNIT === 'imperial' ? 1 : 25.4; // inches stay as-is; metric dims -> mm
+  const t = out.thickness; // already in the right unit per calcVibration's branch
+
+  const totalWeight = UNIT === 'imperial' ? inp.totalLoad : (inp.totalLoad*0.453592)*g; // lbf or N
+  const totalMass = UNIT === 'imperial' ? inp.totalLoad/g : inp.totalLoad*0.453592;      // slug-ish or kg
+  const H = inp.cgHeight*lenConv;
+
+  const Klat_system = inp.numIso * klat;
+  const f_lat = UNIT === 'imperial'
+    ? (1/(2*Math.PI)) * Math.sqrt((Klat_system*g)/totalWeight)
+    : (1/(2*Math.PI)) * Math.sqrt((Klat_system*1000)/totalMass);
+
+  function rockFreq(leverArm) {
+    const K_theta = inp.numIso * (out.Kdyn*leverArm*leverArm + klat*t*t) - totalWeight*H;
+    let f_rock = null;
+    if (K_theta > 0) {
+      if (UNIT === 'imperial') {
+        const I = totalMass * H*H;
+        f_rock = (1/(2*Math.PI)) * Math.sqrt(K_theta/I);
+      } else {
+        const K_theta_SI = K_theta/1000;
+        const I_SI = totalMass * Math.pow(H/1000, 2);
+        f_rock = (1/(2*Math.PI)) * Math.sqrt(K_theta_SI/I_SI);
+      }
+    }
+    return { K_theta, f_rock };
+  }
+
+  if (inp.padLayout === 'circular') {
+    const R = inp.padRadius*lenConv;
+    const { K_theta, f_rock } = rockFreq(R);
+    return { klat, f_lat, H, layout:'circular', R, K_theta, f_rock };
+  } else {
+    const X = inp.padX*lenConv, Y = inp.padY*lenConv;
+    const pitch = rockFreq(X/2);
+    const roll = rockFreq(Y/2);
+    return { klat, f_lat, H, layout:'rect', X, Y,
+      K_pitch: pitch.K_theta, f_pitch: pitch.f_rock,
+      K_roll: roll.K_theta, f_roll: roll.f_rock };
+  }
+}
+
+function renderVibration() {
+  const areaUnit = UNIT==='imperial' ? 'in²' : 'mm²';
+  const lenUnit = UNIT_LABEL[UNIT].length;
+  const kUnit = UNIT==='imperial' ? 'lb/in' : 'N/mm';
+  const loadUnit = UNIT_LABEL[UNIT].mass;
+  const presUnit = UNIT_LABEL[UNIT].pressure;
+
+  // update unit labels in DOM
+  document.getElementById('u-cs').textContent = presUnit;
+  document.getElementById('u-efn').textContent = presUnit;
+  document.getElementById('u-efexc').textContent = presUnit;
+  document.getElementById('u-load').textContent = loadUnit;
+  document.getElementById('lbl-totalload').innerHTML = (UNIT==='imperial' ? 'Total load' : 'Total mass') + ` <span class="unit" id="u-load">${loadUnit}</span>`;
+  ['u-t1l','u-t2l','u-t3l'].forEach(id => document.getElementById(id).textContent = `${loadUnit} (total)`);
+  ['u-t1d','u-t2d','u-t3d'].forEach(id => document.getElementById(id).textContent = lenUnit);
+
+  document.getElementById('v-pct-hint').textContent =
+    'This is your design target for the check below — it does not change the modulus (which is treated as constant, appropriate for a reasonably linear elastomer in this strain range).';
+
+  const inp = readVibInputs();
+  let out;
+  try { out = calcVibration(inp); } catch(e){ return; }
+
+  // per-isolator hint
+  const perLoadDisplay = round(toDisplay('mass', out.loadPer), 3);
+  document.getElementById('v-perisolator').textContent =
+    `= ${fmt(perLoadDisplay)} ${loadUnit} per isolator ${UNIT==='imperial' ? '(force)' : '(mass)'}`;
+
+  // warnings
+  const warns = [];
+  function nearlyEqual(a,b,tol=0.005){ return Math.abs(a-b) <= tol*Math.max(Math.abs(a),Math.abs(b),1e-9); }
+  const efnEqEfexc = nearlyEqual(inp.efn, inp.efexc);
+  const csEqEfn = nearlyEqual(inp.cs, inp.efn);
+  if (efnEqEfexc && csEqEfn) {
+    warns.push({level:'caution', text:`Static modulus, E′(f\u2099), and E′(f_exc) are all the same value — you're treating this material as having zero frequency dependence. Published DMA testing on silicone rubber shows storage modulus genuinely rising with frequency (not flat), sometimes substantially — this is a stand-in for when you lack real data, not a validated equivalence. It matters most when f_exc/f_n is large (here r = ${fmt(out.r,2)}). Get frequency-swept DMA data if this natural-frequency/transmissibility result needs to be trustworthy.`});
+  } else if (efnEqEfexc) {
+    warns.push({level:'caution', text:`E′(f\u2099) and E′(f_exc) are set to the same value — assumes no dynamic stiffening between these two frequencies (r = ${fmt(out.r,2)}). Real elastomers usually stiffen somewhat with frequency; treat the transmissibility result accordingly.`});
+  }
+  if (out.SF > 1.2) {
+    warns.push({level:'caution', text:`Shape factor is ${fmt(out.SF,2)} — above ~1.2. The small-strain bonded-rubber shape-factor formula (Gent & Lindley) is generally reliable up to roughly this range; treat results beyond it as indicative only.`});
+  } else {
+    warns.push({level:'ok', text:`Shape factor ${fmt(out.SF,2)} is within the typical validity range (≤ ~1.2) for the small-strain shape-factor formula.`});
+  }
+  const diffPct = Math.abs(out.pctDeflection - out.assumedPct);
+  if (diffPct > 3) {
+    warns.push({level:'ok', text:`Calculated deflection (${fmt(out.pctDeflection,1)}%) differs from your ${fmt(out.assumedPct,1)}% target — informational only, doesn't affect the modulus used.`});
+  } else {
+    warns.push({level:'ok', text:`Calculated deflection (${fmt(out.pctDeflection,1)}%) is close to your ${fmt(out.assumedPct,1)}% target.`});
+  }
+  if (out.pctDeflection > 20) {
+    warns.push({level:'bad', text:`Static deflection is ${fmt(out.pctDeflection,1)}% — most elastomeric mounts should stay under ~20% continuous static deflection to avoid excess creep/compression set over time.`});
+  } else if (out.pctDeflection < 10) {
+    warns.push({level:'caution', text:`Static deflection is ${fmt(out.pctDeflection,1)}%, below the ~10–20% window commonly used for well-behaved elastomeric mount performance.`});
+  }
+  if (out.pctIsolation < 0) {
+    warns.push({level:'bad', text:`Percent isolation is negative (T = ${fmt(out.T,2)} > 1) — this isolator is amplifying vibration, not isolating it. You're inside the amplification zone (r too close to or below resonance). Raise f_exc/f_n (target r ≳ 1.4, ideally 2.5–3+) or lower the isolator's natural frequency.`});
+  } else if (out.pctIsolation < 50) {
+    warns.push({level:'caution', text:`Percent isolation is only ${fmt(out.pctIsolation,1)}% — isolation is modest at this frequency ratio.`});
+  }
+  document.getElementById('vib-warnings').innerHTML = warns.map(w => `
+    <div class="warn ${w.level}"><span class="mark">${w.level==='ok'?'OK':w.level==='caution'?'!':'✕'}</span><span>${w.text}</span></div>
+  `).join('');
+
+  // results
+  const cell = (label, value, sub) => `<div class="result-cell"><div class="rlabel">${label}</div><div class="rvalue">${value}</div>${sub?`<div class="rsub">${sub}</div>`:''}</div>`;
+  const divider = (t) => `<div class="section-divider">${t}</div>`;
+
+  document.getElementById('vib-results').innerHTML = `
+    ${cell('Shape factor, SF', fmt(out.SF,3))}
+    ${cell('Loaded area', fmt(out.loadedArea, 3) + ` ${areaUnit}`)}
+    ${divider('Static')}
+    ${cell('Compressive modulus', fmt(out.compressiveModulus) + ` ${presUnit}`)}
+    ${cell('Corrected modulus', fmt(out.correctedModulus) + ` ${presUnit}`)}
+    ${cell('Static deflection', fmt(round(out.staticDeflection, UNIT==='imperial'?4:3)) + ` ${lenUnit}`)}
+    <div class="result-cell hero"><div class="rlabel">Percent deflection<span class="iter-badge">target check</span></div><div class="rvalue">${fmt(out.pctDeflection,1)}<small>%</small></div></div>
+    ${divider('Dynamic')}
+    ${cell('Dynamic spring rate, K′', fmt(out.Kdyn) + ` ${kUnit}`)}
+    <div class="result-cell hero"><div class="rlabel">Natural frequency, f\u2099</div><div class="rvalue">${fmt(out.fn,2)}<small>Hz</small></div></div>
+    ${cell('Frequency ratio, r', fmt(out.r,2))}
+    ${cell('Dynamic shear ratio, Gr\u1d48\u02b8\u207f', fmt(out.Grdyn,3))}
+    ${divider('Transmissibility')}
+    ${cell('Transmissibility, T', fmt(out.T,3))}
+    ${cell('Transmissibility @ resonance, Q', fmt(out.Q,2))}
+    <div class="result-cell wide hero"><div class="rlabel">Percent isolation</div><div class="rvalue">${fmt(out.pctIsolation,1)}<small>%</small></div></div>
+  `;
+
+  document.getElementById('vib-formulas').innerHTML = `
+    <p>Shape factor (this shape: ${SHAPES[inp.shape].label}) — Gent &amp; Lindley (1959)</p><code>SF = loaded area / unloaded (bulge) area</code>
+    <p>Compressive modulus, corrected for shape factor</p><code>E_c = (entered directly, or estimated from Shore A)
+E_c,corr = E_c × (1 + 2·SF²)</code>
+    <p>Static deflection &amp; percent deflection</p><code>δ_st = (load/isolator × t) / (E_c,corr × loaded area)
+%δ = δ_st / t × 100      — compared against your target %, informational</code>
+    <p>Dynamic spring rate &amp; natural frequency</p><code>K′ = E′(f_n) × (1 + 2·SF²) × loaded area / t
+f_n = (1/2π) × √( K′ × g / load-per-isolator )</code>
+    <p>Transmissibility</p><code>r = f_exc / f_n
+Gr_dyn = E′(f_n) / E′(f_exc)
+T = √(1+tanδ²) / √( (1 − r²·Gr_dyn)² + tanδ² )
+%isolation = (1 − T) × 100
+Q = √(1+tanδ²) / tanδ    (transmissibility at resonance)</code>
+    <p>Lateral (shear) stiffness — no shape-factor boost applies to shear</p><code>G ≈ E_c / 3          (near-incompressible rubber, ν≈0.5)
+k_lat = k_v / (3·(1+2·SF²))</code>
+    <p>Rocking — point mass M at height H above n pads at radius R, pad thickness t (base-pivot approx.)</p><code>K_θ = n·(k_v·R² + k_lat·t²) − Weight·H     (restoring − destabilizing P-delta)
+f_rock = (1/2π) × √( K_θ / (M·H²) )        undefined/unstable if K_θ ≤ 0</code>
+    <p style="color:var(--text-2);">The k_lat·t² term (pad tops shearing sideways as they sit above the base pivot) is easy to miss but matters when t is not small next to R — leaving it out under-predicted a real validation test by 60-80%; including it cut that to ~10-40%, believed to be coupled translation-rotation effects this single-DOF model can't capture.</p>
+  `;
+}
+
+function renderRocking() {
+  const lenUnit = UNIT_LABEL[UNIT].length;
+  document.getElementById('u-radius').textContent = lenUnit;
+  document.getElementById('u-cgheight').textContent = lenUnit;
+  document.getElementById('u-padx').textContent = lenUnit;
+  document.getElementById('u-pady').textContent = lenUnit;
+
+  const inp = readVibInputs();
+  let out, rock;
+  try { out = calcVibration(inp); rock = calcLateralRocking(inp, out); } catch(e){ return; }
+
+  const Hdisp = parseFloat(document.getElementById('v_cgheight').value);
+  const numIsoDisp = parseFloat(document.getElementById('v_numiso').value) || 1;
+  const kUnit = UNIT==='imperial' ? 'lb/in' : 'N/mm';
+  const torqueUnit = UNIT==='imperial' ? 'lb·in/rad' : 'N·mm/rad';
+  const cell = (label, value, sub) => `<div class="result-cell"><div class="rlabel">${label}</div><div class="rvalue">${value}</div>${sub?`<div class="rsub">${sub}</div>`:''}</div>`;
+  const divider = (t) => `<div class="section-divider">${t}</div>`;
+
+  const warns = [];
+  let diagramSvg = '';
+
+  if (inp.padLayout === 'circular') {
+    const Rdisp = parseFloat(document.getElementById('v_padradius').value);
+    if (!isNaN(Rdisp) && !isNaN(Hdisp)) diagramSvg = svgRockingDiagram(Rdisp, Hdisp, lenUnit, numIsoDisp, rock.K_theta<=0);
+
+    if (rock.K_theta <= 0) {
+      warns.push({level:'bad', text:`Rocking stiffness is negative — this configuration is unstable and would tip over from its own weight (classic top-heavy inverted-pendulum instability). Increase pad spacing R, increase pad stiffness/count, or lower the CG height H.`});
+    } else if (rock.f_rock !== null && rock.f_rock < out.fn) {
+      warns.push({level:'caution', text:`Rocking mode (${fmt(rock.f_rock,2)} Hz) is lower than the vertical mode (${fmt(out.fn,2)} Hz) — this system will wobble side-to-side before it bounces vertically.`});
+    } else {
+      warns.push({level:'ok', text:`Vertical mode (${fmt(out.fn,2)} Hz) is lower than rocking (${fmt(rock.f_rock,2)} Hz) — vertical bounce should dominate.`});
+    }
+    warns.push({level:'ok', text:`Simplified point-mass model, not an exact multi-mode solution — validated against a real 3-point drop/wobble test at ~10-40% under-prediction. Treat this as conservative: the real rocking frequency is probably somewhat higher (stiffer/safer) than shown.`});
+
+    document.getElementById('rock-results').innerHTML = `
+      ${cell('Lateral (shear) stiffness/pad', fmt(rock.klat) + ` ${kUnit}`)}
+      ${cell('Lateral : vertical stiffness', '1 : ' + fmt(out.Kdyn/rock.klat,2))}
+      <div class="result-cell hero"><div class="rlabel">Lateral translation f</div><div class="rvalue">${fmt(rock.f_lat,2)}<small>Hz</small></div></div>
+      <div class="result-cell hero"><div class="rlabel">Rocking (wobble) f</div><div class="rvalue">${rock.f_rock===null?'UNSTABLE':fmt(rock.f_rock,2)}<small>${rock.f_rock===null?'':'Hz'}</small></div></div>
+      ${divider('Diagnostics')}
+      ${cell('Rocking stiffness, K_θ', fmt(rock.K_theta,0) + ` ${torqueUnit}`)}
+      ${cell('Lowest mode', rock.f_rock!==null && rock.f_rock < out.fn ? `Rocking @ ${fmt(rock.f_rock,2)} Hz` : `Vertical @ ${fmt(out.fn,2)} Hz`)}
+    `;
+  } else {
+    const Xdisp = parseFloat(document.getElementById('v_padX').value);
+    const Ydisp = parseFloat(document.getElementById('v_padY').value);
+    if (!isNaN(Xdisp) && !isNaN(Ydisp) && !isNaN(Hdisp)) {
+      diagramSvg = svgRockingDiagramRect(Xdisp, Ydisp, Hdisp, lenUnit, rock.K_pitch<=0 || rock.K_roll<=0);
+    }
+
+    const anyUnstable = rock.K_pitch<=0 || rock.K_roll<=0;
+    if (anyUnstable) {
+      const which = rock.K_pitch<=0 && rock.K_roll<=0 ? 'both pitch and roll' : (rock.K_pitch<=0 ? 'pitch (X-spacing)' : 'roll (Y-spacing)');
+      warns.push({level:'bad', text:`Rocking stiffness is negative in ${which} — this configuration is unstable and would tip over from its own weight. Widen the relevant pad spacing, increase pad stiffness/count, or lower H.`});
+    } else {
+      const lower = rock.f_pitch <= rock.f_roll ? 'pitch (X-spacing)' : 'roll (Y-spacing)';
+      const lowerF = Math.min(rock.f_pitch, rock.f_roll);
+      warns.push({level: lowerF < out.fn ? 'caution' : 'ok', text:`${lower} is the softer rocking direction at ${fmt(lowerF,2)} Hz${lowerF < out.fn ? ` — lower than the vertical mode (${fmt(out.fn,2)} Hz), so this system wobbles before it bounces` : ` (still above the vertical mode, ${fmt(out.fn,2)} Hz)`}. A rectangular footprint tips more easily along its narrower spacing.`});
+    }
+    warns.push({level:'ok', text:`Simplified point-mass model, not an exact multi-mode solution — validated (circular-layout case) against real test data at ~10-40% under-prediction. Treat both pitch and roll here as conservative: real frequencies are probably somewhat higher (stiffer/safer) than shown.`});
+
+    document.getElementById('rock-results').innerHTML = `
+      ${cell('Lateral (shear) stiffness/pad', fmt(rock.klat) + ` ${kUnit}`)}
+      ${cell('Lateral : vertical stiffness', '1 : ' + fmt(out.Kdyn/rock.klat,2))}
+      <div class="result-cell hero"><div class="rlabel">Lateral translation f</div><div class="rvalue">${fmt(rock.f_lat,2)}<small>Hz</small></div></div>
+      ${divider('Pitch — tips along X')}
+      <div class="result-cell hero"><div class="rlabel">Pitch rocking f</div><div class="rvalue">${rock.f_pitch===null?'UNSTABLE':fmt(rock.f_pitch,2)}<small>${rock.f_pitch===null?'':'Hz'}</small></div></div>
+      ${cell('Pitch stiffness, K_θ', fmt(rock.K_pitch,0) + ` ${torqueUnit}`)}
+      ${divider('Roll — tips along Y')}
+      <div class="result-cell hero"><div class="rlabel">Roll rocking f</div><div class="rvalue">${rock.f_roll===null?'UNSTABLE':fmt(rock.f_roll,2)}<small>${rock.f_roll===null?'':'Hz'}</small></div></div>
+      ${cell('Roll stiffness, K_θ', fmt(rock.K_roll,0) + ` ${torqueUnit}`)}
+      ${divider('Diagnostics')}
+      ${cell('Lowest mode overall', (() => {
+        const modes = [['Vertical', out.fn], ['Lateral', rock.f_lat], ['Pitch', rock.f_pitch], ['Roll', rock.f_roll]].filter(m => m[1]!==null);
+        modes.sort((a,b)=>a[1]-b[1]);
+        return `${modes[0][0]} @ ${fmt(modes[0][1],2)} Hz`;
+      })())}
+    `;
+  }
+
+  document.getElementById('rock-diagram').innerHTML = diagramSvg;
+  document.getElementById('rock-warnings').innerHTML = warns.map(w => `
+    <div class="warn ${w.level}"><span class="mark">${w.level==='ok'?'OK':w.level==='caution'?'!':'✕'}</span><span>${w.text}</span></div>
+  `).join('');
+}
+
+/* ============================================================
+   SHOCK TAB
+   ============================================================ */
+function readShkInputs() {
+  const shape = state.shk.shape;
+  const dims = state.shk.dims[shape];
+  const cs = toCanonical('pressure', parseFloat(document.getElementById('s_cs').value));
+  const refPct = parseFloat(document.getElementById('s_refpct').value);
+  const refLoad = toCanonical('mass', parseFloat(document.getElementById('s_refload').value));
+  const manualDst = document.getElementById('s_manual_dst').checked;
+  const manualDstVal = toCanonical('length', parseFloat(document.getElementById('s_manual_dst_val').value));
+  const impactType = state.impactType;
+  const impWeight = toCanonical('mass', parseFloat(document.getElementById('s_impweight').value));
+  const dropHeight = toCanonical('length', parseFloat(document.getElementById('s_dropheight').value));
+  const velocity = toCanonical('velocity', parseFloat(document.getElementById('s_velocity').value));
+  return { shape, dims, cs, refPct, refLoad, manualDst, manualDstVal, impactType, impWeight, dropHeight, velocity };
+}
+
+function calcShock(inp) {
+  // inp.* values are canonical Imperial (lb, in, in/s). Convert to a consistent
+  // mm / N / MPa / kg system for Metric mode (1 MPa = 1 N/mm^2).
+  let SF, loadedArea, thickness, g, csForCalc, refLoadForCalc, impMassForCalc, dropHeightForCalc, velocityForCalc;
+
+  if (UNIT === 'imperial') {
+    const sfr = shapeFactor(inp.shape, inp.dims);
+    SF = sfr.SF; loadedArea = sfr.loadedArea; thickness = inp.dims.t;
+    g = 386.1; csForCalc = inp.cs; refLoadForCalc = inp.refLoad;
+    impMassForCalc = inp.impWeight; dropHeightForCalc = inp.dropHeight; velocityForCalc = inp.velocity;
+  } else {
+    const mmDims = {}; Object.keys(inp.dims).forEach(k => mmDims[k] = inp.dims[k]*25.4);
+    const sfr = shapeFactor(inp.shape, mmDims);
+    SF = sfr.SF; loadedArea = sfr.loadedArea; thickness = mmDims.t;
+    g = 9.80665;
+    csForCalc = inp.cs * 0.00689476;         // psi (canonical) -> MPa
+    refLoadForCalc = inp.refLoad * 0.453592; // lb (canonical) -> kg
+    impMassForCalc = inp.impWeight * 0.453592; // lb (canonical) -> kg
+    dropHeightForCalc = inp.dropHeight * 25.4; // in -> mm
+    velocityForCalc = inp.velocity * 25.4;     // in/s -> mm/s
+  }
+
+  let staticDeflection, k, refForceForCalc;
+  if (UNIT === 'imperial') {
+    if (inp.manualDst) {
+      staticDeflection = inp.manualDstVal;
+    } else {
+      const compressiveModulus = csForCalc;
+      const correctedModulus = compressiveModulus * (1+2*SF*SF);
+      staticDeflection = (refLoadForCalc * thickness) / (correctedModulus * loadedArea);
+    }
+    k = refLoadForCalc / staticDeflection; // lb/in
+  } else {
+    refForceForCalc = refLoadForCalc * g; // N
+    if (inp.manualDst) {
+      staticDeflection = inp.manualDstVal * 25.4; // mm
+    } else {
+      const compressiveModulus = csForCalc;
+      const correctedModulus = compressiveModulus * (1+2*SF*SF);
+      staticDeflection = (refForceForCalc * thickness) / (correctedModulus * loadedArea); // mm
+    }
+    k = refForceForCalc / staticDeflection; // N/mm
+  }
+
+  let KE, KEdisplay, d, pctDynDeflection, peakForce, peakG;
+  if (UNIT === 'imperial') {
+    KE = inp.impactType==='vertical' ? impMassForCalc*dropHeightForCalc
+                                      : 0.5*(impMassForCalc/g)*velocityForCalc*velocityForCalc;
+    KEdisplay = KE; // in·lb
+    d = Math.sqrt(2*KE/k);
+    pctDynDeflection = d/thickness*100;
+    peakForce = k*d;
+    peakG = peakForce/impMassForCalc;
+  } else {
+    const massKg = impMassForCalc;
+    const KE_J = inp.impactType==='vertical' ? massKg*g*(dropHeightForCalc/1000)
+                                              : 0.5*massKg*Math.pow(velocityForCalc/1000,2);
+    KE = KE_J*1000; // N·mm, consistent with k in N/mm so that d = sqrt(2*KE/k) comes out in mm
+    KEdisplay = KE_J; // Joules, for display
+    d = Math.sqrt(2*KE/k); // mm
+    pctDynDeflection = d/thickness*100;
+    peakForce = k*d; // N
+    peakG = peakForce/(massKg*g);
+  }
+
+  return { SF, loadedArea, thickness, staticDeflection, k, KE, KEdisplay, d, pctDynDeflection, peakForce, peakG };
+}
+
+function renderShock() {
+  const lenUnit = UNIT_LABEL[UNIT].length;
+  const areaUnit = UNIT==='imperial' ? 'in²' : 'mm²';
+  const kUnit = UNIT==='imperial' ? 'lb/in' : 'N/mm';
+  const massUnit = UNIT_LABEL[UNIT].mass;
+  const presUnit = UNIT_LABEL[UNIT].pressure;
+  const forceUnit = UNIT==='imperial' ? 'lbf' : 'N';
+  const keUnit = UNIT==='imperial' ? 'in·lb' : 'J';
+  const velUnit = UNIT_LABEL[UNIT].velocity;
+
+  document.getElementById('u-cs2').textContent = presUnit;
+  document.getElementById('u-refload').textContent = massUnit;
+  document.getElementById('lbl-refload').innerHTML = `Reference ${UNIT==='imperial'?'load':'mass'} at this % deflection <span class="unit" id="u-refload">${massUnit}</span>`;
+  document.getElementById('u-manualdst').textContent = lenUnit;
+  document.getElementById('u-impweight').textContent = massUnit;
+  document.getElementById('lbl-impactweight').innerHTML = `Component ${UNIT==='imperial'?'weight':'mass'} <span class="unit" id="u-impweight">${massUnit}</span>`;
+  document.getElementById('u-dropheight').textContent = lenUnit;
+  document.getElementById('u-velocity').textContent = velUnit;
+
+  document.getElementById('s_manual_dst_row').style.display = state.manualDst ? 'block' : 'none';
+  document.getElementById('s_dropheight_field').style.display = state.impactType==='vertical' ? 'flex' : 'none';
+  document.getElementById('s_velocity_field').style.display = state.impactType==='horizontal' ? 'flex' : 'none';
+  document.getElementById('impact-diagram').innerHTML = svgImpactDiagram(state.impactType);
+
+  const inp = readShkInputs();
+  let out;
+  try { out = calcShock(inp); } catch(e){ return; }
+
+  const warns = [];
+  if (out.SF > 1.2) {
+    warns.push({level:'caution', text:`Shape factor is ${fmt(out.SF,2)} — above ~1.2. The small-strain bonded-rubber shape-factor formula (Gent & Lindley) is generally reliable up to roughly this range.`});
+  } else {
+    warns.push({level:'ok', text:`Shape factor ${fmt(out.SF,2)} is within the typical validity range (≤ ~1.2).`});
+  }
+  if (out.pctDynDeflection < 40) {
+    warns.push({level:'ok', text:`Dynamic deflection ${fmt(out.pctDynDeflection,1)}% is below 40% — commonly cited as the threshold below which elastomeric mounts see effectively unlimited fatigue life. Exact numbers are material-specific; verify against your own material's fatigue data for a critical design.`});
+  } else if (out.pctDynDeflection <= 60) {
+    warns.push({level:'caution', text:`Dynamic deflection ${fmt(out.pctDynDeflection,1)}% is in the 40–60% band, where fatigue life for many elastomers starts dropping off. Material-specific — verify against your own fatigue data if this cycles repeatedly.`});
+  } else {
+    warns.push({level:'bad', text:`Dynamic deflection ${fmt(out.pctDynDeflection,1)}% exceeds 60% — well into the range where fatigue life is hard to predict without test data. Increase pad thickness/area or reduce impact energy.`});
+  }
+  document.getElementById('shk-warnings').innerHTML = warns.map(w => `
+    <div class="warn ${w.level}"><span class="mark">${w.level==='ok'?'OK':w.level==='caution'?'!':'✕'}</span><span>${w.text}</span></div>
+  `).join('');
+
+  const cell = (label, value, sub) => `<div class="result-cell"><div class="rlabel">${label}</div><div class="rvalue">${value}</div>${sub?`<div class="rsub">${sub}</div>`:''}</div>`;
+  const divider = (t) => `<div class="section-divider">${t}</div>`;
+
+  document.getElementById('shk-results').innerHTML = `
+    ${cell('Shape factor, SF', fmt(out.SF,3))}
+    ${cell('Loaded area', fmt(out.loadedArea,3) + ` ${areaUnit}`)}
+    ${divider('Spring rate')}
+    ${cell('Static deflection @ reference', `${fmt(out.staticDeflection, UNIT==='imperial'?4:3)} ${lenUnit}`)}
+    ${cell('Nominal spring rate, k', fmt(out.k) + ` ${kUnit}`)}
+    ${divider('Impact')}
+    ${cell('Kinetic energy', fmt(out.KEdisplay,3) + ` ${keUnit}`)}
+    <div class="result-cell hero"><div class="rlabel">Dynamic deflection</div><div class="rvalue">${fmt(out.d, UNIT==='imperial'?4:3)}<small>${lenUnit}</small></div></div>
+    <div class="result-cell hero"><div class="rlabel">Percent dynamic deflection</div><div class="rvalue">${fmt(out.pctDynDeflection,1)}<small>%</small></div></div>
+    ${divider('Supplemental (derived)')}
+    ${cell('Peak transmitted force', fmt(out.peakForce) + ` ${forceUnit}`)}
+    ${cell('Peak acceleration', fmt(out.peakG,1) + ` g`)}
+  `;
+
+  document.getElementById('shk-formulas').innerHTML = `
+    <p>Spring rate at a reference % deflection</p><code>${state.manualDst ? 'k = reference load / measured static deflection  (measured directly)' : `E_c = (entered directly, or estimated from Shore A)
+E_c,corr = E_c × (1 + 2·SF²)
+δ_st = (ref load × t) / (E_c,corr × loaded area)
+k = ref load / δ_st`}</code>
+    <p>Kinetic energy of impact</p><code>Vertical drop:      KE = W × h
+Horizontal impact:  KE = ½ m v²</code>
+    <p>Dynamic deflection (energy method — spring energy = kinetic energy)</p><code>d = √(2·KE / k)
+%d = d / t × 100</code>
+    <p>Fatigue-life guidance (SF ≤ ~1.2) — indicative pattern, material-specific in practice</p><code>%d &lt; 40%    →  fatigue life > 1,000,000 cycles (indefinite)
+40% ≤ %d ≤ 60%  →  fatigue life > 1,000 cycles
+%d &gt; 60%    →  fatigue life hard to predict without test data</code>
+    <p>Supplemental — directly derivable, not always shown elsewhere, but commonly wanted:</p><code>Peak force  F = k × d
+Peak accel. (g's) = F / W</code>
+  `;
+}
+
+/* ---------------------------- recalc / render orchestrator ---------------------------- */
+// Calibrate-from-test-data: regression-through-origin for E_c using the INDEPENDENT
+// test-specimen geometry in state.calib (deliberately decoupled from state.vib's
+// current design geometry, so redesigning the part doesn't retroactively corrupt a
+// calibration measured on a different physical specimen).
+function computeCalibration() {
+  const shape = state.calib.shape;
+  const dims = state.calib.dims[shape];
+  const numIsoEl = document.getElementById('v_calib_numiso');
+  const numIso = parseFloat(numIsoEl.value) || 1;
+  const sfr = UNIT === 'imperial' ? shapeFactor(shape, dims)
+    : shapeFactor(shape, Object.fromEntries(Object.entries(dims).map(([k,v])=>[k,v*25.4])));
+  const thickness = UNIT === 'imperial' ? dims.t : dims.t*25.4;
+  const corr = 1 + 2*sfr.SF*sfr.SF;
+
+  const rows = [['v_t1_load','v_t1_defl'],['v_t2_load','v_t2_defl'],['v_t3_load','v_t3_defl']];
+  let sumFd = 0, sumFF = 0, n = 0;
+  rows.forEach(([lId, dId]) => {
+    const loadDisp = parseFloat(document.getElementById(lId).value);
+    const deflDisp = parseFloat(document.getElementById(dId).value);
+    if (isNaN(loadDisp) || isNaN(deflDisp) || loadDisp<=0 || deflDisp<=0) return;
+    const loadCanon = toCanonical('mass', loadDisp); // canonical lb (total)
+    const deflCanon = toCanonical('length', deflDisp); // canonical inches
+    let F, d;
+    if (UNIT === 'imperial') { F = loadCanon/numIso; d = deflCanon; }
+    else { F = (loadCanon*0.453592/numIso) * 9.80665; d = deflCanon*25.4; } // N, mm
+    sumFd += F*d; sumFF += F*F; n++;
+  });
+
+  const est = document.getElementById('v_calib_result');
+  if (n === 0 || sumFF === 0) { est.value = '—'; return null; }
+  const slope = sumFd/sumFF; // mm/N or in/lbf
+  const Ecorr = thickness/(slope*sfr.loadedArea);
+  const Ec = Ecorr/corr;
+  const val = round(Ec, UNIT==='imperial'?3:4);
+  est.value = `${val} ${UNIT_LABEL[UNIT].pressure}  (${n} point${n>1?'s':''})`;
+  return val;
+}
+
+function recalc() {
+  document.getElementById('vib-diagram').innerHTML = svgDiagram(state.vib.shape, state.vib.dims[state.vib.shape]);
+  document.getElementById('shk-diagram').innerHTML = svgDiagram(state.shk.shape, state.shk.dims[state.shk.shape]);
+  renderVibration();
+  renderRocking();
+  renderShock();
+  computeCalibration();
+}
+
+/* ---------------------------- wiring ---------------------------- */
+function refreshAllDimFieldValues() {
+  ['vib','shk','calib'].forEach(target => renderDimFields(target));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderShapeSelector('vib');
+  renderShapeSelector('shk');
+  renderShapeSelector('calib');
+  renderDimFields('vib');
+  renderDimFields('shk');
+  renderDimFields('calib');
+
+  // unit switch
+  const unitSwitch = document.getElementById('unitSwitch');
+  unitSwitch.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const newUnit = btn.dataset.unit;
+      if (newUnit === UNIT) return;
+      UNIT = newUnit;
+      unitSwitch.classList.toggle('metric', UNIT==='metric');
+      unitSwitch.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.unit===UNIT));
+      // refresh all numeric field displayed values (convert canonical -> new unit)
+      document.querySelectorAll('input[type=number]').forEach(inp => {
+        const kind = FIELD_KIND[inp.id];
+        if (kind) {
+          // value currently displayed in OLD unit; convert old-display -> canonical -> new-display
+          // simplest: re-derive from state where possible; for standalone fields, convert value directly
+          const prevUnit = UNIT === 'metric' ? 'imperial' : 'metric';
+          const oldVal = parseFloat(inp.value);
+          if (!isNaN(oldVal)) {
+            const canonical = prevUnit === 'imperial' ? oldVal : CONV[kind].toImperial(oldVal);
+            const display = UNIT === 'imperial' ? canonical : CONV[kind].toMetric(canonical);
+            inp.value = round(display, kind==='pressure'?4:3);
+          }
+        }
+      });
+      refreshAllDimFieldValues();
+      if (typeof updateVShoreEst === 'function') updateVShoreEst();
+      if (typeof updateSShoreEst === 'function') updateSShoreEst();
+      if (typeof computeCalibration === 'function') computeCalibration();
+      recalc();
+    });
+  });
+
+  // Shore A -> modulus estimator (live preview + fill buttons)
+  function wireShoreHelper(inputId, estId, fillBtnId, targetFieldIds) {
+    const inp = document.getElementById(inputId);
+    const est = document.getElementById(estId);
+    const updateEst = () => {
+      const S = parseFloat(inp.value);
+      const eMPa = shoreAtoModulusMPa(S);
+      if (eMPa === null) { est.value = '—'; return; }
+      const val = UNIT === 'imperial' ? eMPa / 0.00689476 : eMPa;
+      est.value = `${round(val, UNIT==='imperial'?1:3)} ${UNIT_LABEL[UNIT].pressure}`;
+    };
+    inp.addEventListener('input', updateEst);
+    document.getElementById(fillBtnId).addEventListener('click', () => {
+      const S = parseFloat(inp.value);
+      const eMPa = shoreAtoModulusMPa(S);
+      if (eMPa === null) return;
+      const val = round(UNIT === 'imperial' ? eMPa / 0.00689476 : eMPa, UNIT==='imperial'?2:3);
+      targetFieldIds.forEach(id => { document.getElementById(id).value = val; });
+      recalc();
+    });
+    updateEst();
+    return updateEst;
+  }
+  const updateVShoreEst = wireShoreHelper('v_shoreA','v_shoreEst','v_shore_fill', ['v_cs','v_efn','v_efexc']);
+  const updateSShoreEst = wireShoreHelper('s_shoreA','s_shoreEst','s_shore_fill', ['s_cs']);
+
+  // tabs
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.panel-section').forEach(p => p.classList.remove('active'));
+      document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
+    });
+  });
+
+  // impact type segmented control
+  document.getElementById('impact-type-seg').querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.impactType = btn.dataset.type;
+      document.getElementById('impact-type-seg').querySelectorAll('button').forEach(b => b.classList.toggle('active', b===btn));
+      recalc();
+    });
+  });
+
+  // pad layout segmented control (circular vs rectangular)
+  document.getElementById('v-layout-seg').querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.vib.padLayout = btn.dataset.layout;
+      document.getElementById('v-layout-seg').querySelectorAll('button').forEach(b => b.classList.toggle('active', b===btn));
+      document.getElementById('v-circular-fields').style.display = state.vib.padLayout==='circular' ? 'flex' : 'none';
+      document.getElementById('v-rect-fields').style.display = state.vib.padLayout==='rect' ? 'flex' : 'none';
+      recalc();
+    });
+  });
+
+  // manual static deflection toggle
+  document.getElementById('s_manual_dst').addEventListener('change', (e) => {
+    state.manualDst = e.target.checked;
+    recalc();
+  });
+
+  // any other input changes
+  ['v_cs','v_assumedPct','v_efn','v_efexc','v_tandelta','v_totalload','v_numiso','v_fexc',
+   'v_padradius','v_cgheight','v_padX','v_padY',
+   's_cs','s_refpct','s_refload','s_manual_dst_val','s_impweight','s_dropheight','s_velocity']
+   .forEach(id => document.getElementById(id).addEventListener('input', recalc));
+
+  // Calibrate-from-test-data panel wiring (computeCalibration itself is a top-level
+  // function, called every recalc() so it always stays in sync with unit/shape changes)
+  ['v_t1_load','v_t1_defl','v_t2_load','v_t2_defl','v_t3_load','v_t3_defl','v_calib_numiso']
+    .forEach(id => document.getElementById(id).addEventListener('input', recalc));
+  document.getElementById('v_calib_fill').addEventListener('click', () => {
+    const val = computeCalibration();
+    if (val === null) return;
+    ['v_cs','v_efn','v_efexc'].forEach(id => { document.getElementById(id).value = val; });
+    recalc();
+  });
+  computeCalibration();
+  document.getElementById('calib-diagram').innerHTML = svgCalibDiagram();
+
+  recalc();
+});
+
+</script>
+</body>
+</html>
