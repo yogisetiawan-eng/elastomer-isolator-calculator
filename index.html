@@ -295,6 +295,44 @@ details.formulas[open] summary:before{transform:rotate(90deg);}
 .matref-table td:first-child{color:var(--text-2);}
 .matref-table td:last-child{text-align:right;color:var(--cyan);}
 
+/* ---------- Material selection / library ---------- */
+.material-bar{
+  display:grid;grid-template-columns:auto minmax(240px,420px) 1fr auto;
+  gap:12px;align-items:center;margin:0 0 22px;padding:12px 14px;
+  background:linear-gradient(90deg,rgba(95,208,214,0.08),rgba(242,163,65,0.04));
+  border:1px solid var(--line-strong);border-radius:var(--radius);
+}
+.material-bar .material-label{
+  font-family:var(--font-mono);font-size:0.68rem;letter-spacing:0.09em;
+  text-transform:uppercase;color:var(--cyan);
+}
+.material-bar select{
+  width:100%;background:var(--bg-1);border:1px solid var(--line-strong);
+  color:var(--text-0);font-family:var(--font-mono);font-size:0.8rem;
+  padding:8px 9px;border-radius:2px;
+}
+.material-bar select:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 2px var(--cyan-dim);}
+.material-summary{font-size:0.72rem;color:var(--text-2);line-height:1.4;}
+.material-link{
+  white-space:nowrap;background:transparent;border:1px solid var(--line-strong);
+  color:var(--text-1);font-family:var(--font-mono);font-size:0.7rem;
+  padding:8px 11px;border-radius:2px;cursor:pointer;
+}
+.material-link:hover{border-color:var(--cyan);color:var(--cyan);}
+.library-grid{display:grid;grid-template-columns:minmax(280px,0.8fr) minmax(360px,1.2fr);gap:22px;align-items:start;}
+.material-status{
+  display:inline-flex;padding:3px 8px;border-radius:12px;border:1px solid var(--line-strong);
+  font-family:var(--font-mono);font-size:0.65rem;color:var(--amber);margin-bottom:12px;
+}
+.material-copy{color:var(--text-1);font-size:0.82rem;line-height:1.65;margin:0;}
+@media (max-width:760px){
+  .tabbar{overflow-x:auto;}
+  .tabbar button{white-space:nowrap;padding-left:12px;padding-right:12px;}
+  .material-bar{grid-template-columns:1fr;}
+  .material-link{width:100%;}
+  .library-grid{grid-template-columns:1fr;}
+}
+
 footer.disclaimer{
   margin-top:34px;padding-top:18px;border-top:1px solid var(--line);
   font-size:0.74rem;color:var(--text-2);line-height:1.6;
@@ -342,7 +380,15 @@ footer.disclaimer strong{color:var(--text-1);}
   <nav class="tabbar">
     <button type="button" class="tab-btn active" data-tab="vibration"><span class="num">01</span> Vibration Isolator</button>
     <button type="button" class="tab-btn" data-tab="shock"><span class="num">02</span> Shock / Impact Isolator</button>
+    <button type="button" class="tab-btn" data-tab="materials"><span class="num">03</span> Material Library</button>
   </nav>
+
+  <div class="material-bar" aria-label="Active calculation material">
+    <span class="material-label">Calculation material</span>
+    <select id="material-select" aria-label="Select calculation material"></select>
+    <span class="material-summary" id="material-summary"></span>
+    <button type="button" class="material-link" id="open-material-library">View material details →</button>
+  </div>
 
   <!-- ============================= VIBRATION TAB ============================= -->
   <section class="panel-section active" id="panel-vibration">
@@ -500,8 +546,28 @@ footer.disclaimer strong{color:var(--text-1);}
     </div>
   </section>
 
+  <!-- ============================= MATERIAL LIBRARY TAB ============================= -->
+  <section class="panel-section" id="panel-materials">
+    <div class="library-grid">
+      <div class="card">
+        <div class="card-head"><h3>Selected Material</h3></div>
+        <div class="card-body" id="material-overview"></div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-head"><h3>Calculation Properties</h3></div>
+          <div class="card-body"><table class="matref-table" id="material-model-table"></table></div>
+        </div>
+        <div class="card" id="material-test-card">
+          <div class="card-head"><h3>Experimental / Datasheet Record</h3></div>
+          <div class="card-body" id="material-test-details"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <footer class="disclaimer">
-    <strong>Advisory tool, not a substitute for testing.</strong> Implements standard small-strain bonded-rubber mechanics, forced-vibration transmissibility, and shock energy-balance theory. Material behavior is supplied by the calculator's internal experimental profile. This does not account for buckling, creep, temperature effects, or manufacturing/casting limitations; verify final designs against physical prototypes.
+    <strong>Advisory tool, not a substitute for testing.</strong> Implements standard small-strain bonded-rubber mechanics, forced-vibration transmissibility, and shock energy-balance theory. The selected material profile supplies the calculation properties; estimated profiles are starting points only. This does not account for buckling, creep, temperature effects, or manufacturing/casting limitations; verify final designs against physical prototypes.
     <br><br><strong>Reference:</strong> Gent, A.N. &amp; Lindley, P.B. (1959), "The Compression of Bonded Rubber Blocks," <em>Proc. IMechE</em> 173(1), 111–122 (shape-factor correction).
   </footer>
 
@@ -538,34 +604,66 @@ const UNIT_LABEL = {
 
 let UNIT = 'metric'; // 'imperial' | 'metric'
 
-// Internal material profile. The complete material record and the experimental
-// calibration remain available to the calculation engine but are intentionally
-// not rendered as editable fields or reference tables in the interface.
-const INTERNAL_MATERIAL = Object.freeze({
-  identity: { family:'addition-cure LSR', mixRatio:'1:1', shoreA:42 },
-  datasheet: {
-    density_g_cm3:1.12,
-    tensileStrength_MPa:8.0,
-    elongationAtBreak_pct:600,
-    tearStrength_N_mm:40,
-    compressionSet_pct:25,
+// The selector exposes concise material names in the calculator. Full records
+// live in the Material Library tab so the main sizing workflow stays compact.
+function estimatedMaterial(id, shoreA) {
+  const modulus = shoreAtoModulusMPa(shoreA);
+  return {
+    id,
+    name:`Generic elastomer — ${shoreA} Shore A`,
+    shortName:`Generic ${shoreA}A`,
+    status:'Estimated from Shore A',
+    sourceType:'estimated',
+    identity:{ family:'generic elastomer', shoreA },
+    model:{
+      compressiveModulus_MPa:modulus,
+      dynamicModulusAtNaturalFrequency_MPa:modulus,
+      dynamicModulusAtExcitationFrequency_MPa:modulus,
+      tanDelta:0.05,
+    },
+  };
+}
+
+const MATERIALS = Object.freeze({
+  experimental_silopren_2640: {
+    id:'experimental_silopren_2640',
+    name:'Silopren LSR 2640 — experimental calibration',
+    shortName:'Silopren LSR 2640 · measured',
+    status:'Experimentally calibrated',
+    sourceType:'experimental',
+    identity:{ family:'addition-cure LSR', mixRatio:'1:1', shoreA:42 },
+    datasheet: {
+      density_g_cm3:1.12,
+      tensileStrength_MPa:8.0,
+      elongationAtBreak_pct:600,
+      tearStrength_N_mm:40,
+      compressionSet_pct:25,
+    },
+    experimental: {
+      specimen:{ shape:'disc', diameter_mm:25, thickness_mm:30, count:3 },
+      compressionTest:[
+        { totalMass_kg:5, deflection_mm:1.1 },
+        { totalMass_kg:9, deflection_mm:2.2 },
+        { totalMass_kg:13, deflection_mm:3.0 },
+      ],
+      compressiveModulus_MPa:0.795,
+    },
+    model: {
+      compressiveModulus_MPa:0.795,
+      dynamicModulusAtNaturalFrequency_MPa:0.795,
+      dynamicModulusAtExcitationFrequency_MPa:0.795,
+      tanDelta:0.05,
+    },
   },
-  experimental: {
-    specimen:{ shape:'disc', diameter_mm:25, thickness_mm:30, count:3 },
-    compressionTest:[
-      { totalMass_kg:5, deflection_mm:1.1 },
-      { totalMass_kg:9, deflection_mm:2.2 },
-      { totalMass_kg:13, deflection_mm:3.0 },
-    ],
-    compressiveModulus_MPa:0.795,
-  },
-  model: {
-    compressiveModulus_MPa:0.795,
-    dynamicModulusAtNaturalFrequency_MPa:0.795,
-    dynamicModulusAtExcitationFrequency_MPa:0.795,
-    tanDelta:0.05,
-  },
+  generic_30a: estimatedMaterial('generic_30a',30),
+  generic_40a: estimatedMaterial('generic_40a',40),
+  generic_50a: estimatedMaterial('generic_50a',50),
+  generic_60a: estimatedMaterial('generic_60a',60),
+  generic_70a: estimatedMaterial('generic_70a',70),
 });
+
+let selectedMaterialId = 'experimental_silopren_2640';
+function activeMaterial() { return MATERIALS[selectedMaterialId]; }
 
 function toDisplay(kind, canonicalVal) {
   if (!kind || UNIT === 'imperial') return canonicalVal;
@@ -943,11 +1041,12 @@ function fmt(v, decimals) {
 function readVibInputs() {
   const shape = state.vib.shape;
   const dims = state.vib.dims[shape]; // canonical inches
-  const cs = INTERNAL_MATERIAL.model.compressiveModulus_MPa / 0.00689476;
+  const material = activeMaterial();
+  const cs = material.model.compressiveModulus_MPa / 0.00689476;
   const assumedPct = parseFloat(document.getElementById('v_assumedPct').value);
-  const efn = INTERNAL_MATERIAL.model.dynamicModulusAtNaturalFrequency_MPa / 0.00689476;
-  const efexc = INTERNAL_MATERIAL.model.dynamicModulusAtExcitationFrequency_MPa / 0.00689476;
-  const tanDelta = INTERNAL_MATERIAL.model.tanDelta;
+  const efn = material.model.dynamicModulusAtNaturalFrequency_MPa / 0.00689476;
+  const efexc = material.model.dynamicModulusAtExcitationFrequency_MPa / 0.00689476;
+  const tanDelta = material.model.tanDelta;
   const totalLoad = toCanonical('mass', parseFloat(document.getElementById('v_totalload').value));
   const numIso = parseFloat(document.getElementById('v_numiso').value) || 1;
   const fexc = parseFloat(document.getElementById('v_fexc').value);
@@ -1104,7 +1203,13 @@ function renderVibration() {
 
   // warnings
   const warns = [];
-  warns.push({level:'caution', text:'Calculations use the internal experimental material model. Validate critical designs with a physical prototype under the actual temperature and frequency conditions.'});
+  const material = activeMaterial();
+  warns.push({
+    level:'caution',
+    text: material.sourceType === 'experimental'
+      ? `Using ${material.shortName}. Static compression is measured; dynamic modulus and tan delta remain provisional. Validate critical designs under the actual temperature and frequency conditions.`
+      : `Using ${material.shortName}. Modulus is estimated from Shore A and the dynamic values are provisional; replace with supplier or test data before final design.`
+  });
   if (out.SF > 1.2) {
     warns.push({level:'caution', text:`Shape factor is ${fmt(out.SF,2)} — above ~1.2. The small-strain bonded-rubber shape-factor formula (Gent & Lindley) is generally reliable up to roughly this range; treat results beyond it as indicative only.`});
   } else {
@@ -1262,7 +1367,7 @@ function renderRocking() {
 function readShkInputs() {
   const shape = state.shk.shape;
   const dims = state.shk.dims[shape];
-  const cs = INTERNAL_MATERIAL.model.compressiveModulus_MPa / 0.00689476;
+  const cs = activeMaterial().model.compressiveModulus_MPa / 0.00689476;
   const impactType = state.impactType;
   const impWeight = toCanonical('mass', parseFloat(document.getElementById('s_impweight').value));
   const dropHeight = toCanonical('length', parseFloat(document.getElementById('s_dropheight').value));
@@ -1344,7 +1449,13 @@ function renderShock() {
   let out;
   try { out = calcShock(inp); } catch(e){ return; }
 
-  const warns = [];
+  const material = activeMaterial();
+  const warns = [{
+    level:'caution',
+    text: material.sourceType === 'experimental'
+      ? `Using ${material.shortName}; the compression modulus is test-derived, while impact behavior still requires prototype validation.`
+      : `Using ${material.shortName}; its modulus is a Shore-A estimate, not measured impact data.`
+  }];
   if (out.SF > 1.2) {
     warns.push({level:'caution', text:`Shape factor is ${fmt(out.SF,2)} — above ~1.2. The small-strain bonded-rubber shape-factor formula (Gent & Lindley) is generally reliable up to roughly this range.`});
   } else {
@@ -1379,7 +1490,7 @@ function renderShock() {
   `;
 
   document.getElementById('shk-formulas').innerHTML = `
-    <p>Spring rate from the internal material profile</p><code>k = E_profile × (1 + 2·SF²) × loaded area / t</code>
+    <p>Spring rate from the selected material profile</p><code>k = E_profile × (1 + 2·SF²) × loaded area / t</code>
     <p>Kinetic energy of impact</p><code>Vertical drop:      KE = W × h
 Horizontal impact:  KE = ½ m v²</code>
     <p>Dynamic deflection (energy method — spring energy = kinetic energy)</p><code>d = √(2·KE / k)
@@ -1392,6 +1503,77 @@ Peak accel. (g's) = F / W</code>
   `;
 }
 
+/* ---------------------------- material selection / library ---------------------------- */
+function materialRows(rows) {
+  return rows.map(([label,value]) => `<tr><td>${label}</td><td>${value}</td></tr>`).join('');
+}
+
+function renderMaterialUI() {
+  const select = document.getElementById('material-select');
+  if (!select.options.length) {
+    select.innerHTML = Object.values(MATERIALS)
+      .map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+  }
+  select.value = selectedMaterialId;
+
+  const material = activeMaterial();
+  const model = material.model;
+  document.getElementById('material-summary').textContent =
+    `${material.status} · Ec ${fmt(model.compressiveModulus_MPa,3)} MPa · tan δ ${fmt(model.tanDelta,3)}`;
+
+  document.getElementById('material-overview').innerHTML = `
+    <span class="material-status">${material.status}</span>
+    <h2 style="font-family:var(--font-head);font-size:1.25rem;margin:0 0 10px;">${material.name}</h2>
+    <p class="material-copy">${material.sourceType === 'experimental'
+      ? 'This is the measured material profile. Its static compressive modulus comes from the three-pad compression test shown here. The calculator uses this selection immediately in both vibration and shock calculations.'
+      : 'This is a generic starting profile. Its modulus comes from the Gent Shore-A correlation, not a test of a specific compound. Use it for comparison and early sizing only.'}</p>
+  `;
+
+  document.getElementById('material-model-table').innerHTML = materialRows([
+    ['Material family', material.identity.family],
+    ['Shore A hardness', material.identity.shoreA],
+    ['Compressive modulus, Ec', `${fmt(model.compressiveModulus_MPa,3)} MPa`],
+    ["Dynamic modulus @ fn, E′", `${fmt(model.dynamicModulusAtNaturalFrequency_MPa,3)} MPa`],
+    ["Dynamic modulus @ fexc, E′", `${fmt(model.dynamicModulusAtExcitationFrequency_MPa,3)} MPa`],
+    ['Loss factor, tan δ', fmt(model.tanDelta,3)],
+    ['Model source', material.sourceType === 'experimental' ? 'Compression-test calibration' : 'Gent (1958) Shore-A estimate'],
+  ]);
+
+  const details = document.getElementById('material-test-details');
+  if (material.sourceType === 'experimental') {
+    const d = material.datasheet;
+    const e = material.experimental;
+    const testRows = e.compressionTest.map((p,i) =>
+      `<tr><td>Test point ${i+1}</td><td>${p.totalMass_kg} kg total → ${p.deflection_mm} mm</td></tr>`).join('');
+    details.innerHTML = `
+      <p class="material-copy" style="margin-bottom:12px;">Test specimen: ${e.specimen.count} × Ø${e.specimen.diameter_mm} × ${e.specimen.thickness_mm} mm discs. Regression through the measured load/deflection points produced Ec = ${fmt(e.compressiveModulus_MPa,3)} MPa.</p>
+      <table class="matref-table">
+        ${testRows}
+        ${materialRows([
+          ['Mix ratio', material.identity.mixRatio],
+          ['Density', `${d.density_g_cm3} g/cm³`],
+          ['Tensile strength', `${d.tensileStrength_MPa} MPa`],
+          ['Elongation at break', `${d.elongationAtBreak_pct}%`],
+          ['Tear strength', `${d.tearStrength_N_mm} N/mm`],
+          ['Compression set', `${d.compressionSet_pct}%`],
+        ])}
+      </table>
+      <p class="hint" style="margin-top:12px;">Dynamic modulus and tan δ were not measured independently. They are provisionally set to the static modulus and 0.05 respectively.</p>
+    `;
+  } else {
+    details.innerHTML = `
+      <p class="material-copy">No experimental record is attached to this generic profile. Ec is estimated from Shore A hardness using Gent's correlation. E′ at both frequencies is provisionally set equal to Ec and tan δ is a placeholder.</p>
+      <p class="hint" style="margin-top:12px;">For production design, replace these estimates with supplier data or compression/DMA measurements for the exact compound, temperature, strain, and frequency.</p>
+    `;
+  }
+}
+
+function activateTab(tabName) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
+  document.querySelectorAll('.panel-section').forEach(p => p.classList.remove('active'));
+  document.getElementById(`panel-${tabName}`).classList.add('active');
+}
+
 /* ---------------------------- recalc / render orchestrator ---------------------------- */
 function recalc() {
   document.getElementById('vib-diagram').innerHTML = svgDiagram(state.vib.shape, state.vib.dims[state.vib.shape]);
@@ -1399,6 +1581,7 @@ function recalc() {
   renderVibration();
   renderRocking();
   renderShock();
+  renderMaterialUI();
 }
 
 /* ---------------------------- wiring ---------------------------- */
@@ -1411,6 +1594,13 @@ document.addEventListener('DOMContentLoaded', () => {
   renderShapeSelector('shk');
   renderDimFields('vib');
   renderDimFields('shk');
+  renderMaterialUI();
+
+  document.getElementById('material-select').addEventListener('change', event => {
+    selectedMaterialId = event.target.value;
+    recalc();
+  });
+  document.getElementById('open-material-library').addEventListener('click', () => activateTab('materials'));
 
   // unit switch
   const unitSwitch = document.getElementById('unitSwitch');
@@ -1443,12 +1633,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // tabs
   document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      document.querySelectorAll('.panel-section').forEach(p => p.classList.remove('active'));
-      document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
-    });
+    btn.addEventListener('click', () => activateTab(btn.dataset.tab));
   });
 
   // impact type segmented control
