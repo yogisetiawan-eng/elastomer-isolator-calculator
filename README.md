@@ -1,13 +1,7 @@
 # Elastomer Isolator Calculator
 
-A browser-based engineering calculator for preliminary vibration and shock isolator design using bonded elastomers.
+Interactive calculator for vibration isolation, rocking stability, and shock sizing of elastomer mounts.
 
-## Use
+The current version includes a **Linear row (pitch only)** layout for one-column pad arrangements. The experimental preset uses Ø45 × 20 mm pads, 80 mm adjacent spacing, Z = 215 mm referenced to the pad centerline, and a measured pitch frequency of approximately 6.2 Hz. Roll frequency is intentionally not calculated for this layout because there is no Y-direction support spread.
 
-Open `index.html` in a modern web browser. The application is a self-contained static page; no build step is required. Internet access is only used to load the configured Google Fonts.
-
-## Scope
-
-The calculator covers vibration-isolation and shock checks, including static deflection, natural frequency, transmissibility, and elastomer shape-factor effects.
-
-This is an advisory design tool. Validate critical designs against physical testing and material-supplier data.
+Open the calculator with GitHub Pages for this repository.
